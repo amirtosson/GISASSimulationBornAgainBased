@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Apr  9 08:12:24 2021
-
-@author: Tosson
+@author:    Amir Tosson
+@license:   GNU General Public License v3 or higher
+@copyright: Universität Siegen, Deutschland
+@email:     tosson@physik.uni-siegen.de   
 """
 import bornagain as ba
 from bornagain import deg, nm
@@ -15,6 +16,7 @@ import multiprocessing
 from numba import cuda
 import numpy as np
 import threading
+import concurrent.futures
 t1_start=0
 t1_stop=0
 
@@ -27,7 +29,7 @@ def InitBeam():
     return beam
 
 def InitDetector():
-    detector = ba.RectangularDetector(1024, 1.5, 1024, 51.2)
+    detector = ba.RectangularDetector(1024, 15, 1024, 51.2)
     detector.setResolutionFunction(ba.ResolutionFunction2DGaussian(0.02, 0.02))
     detector.setPerpendicularToReflectedBeam(1277.0, 0.75, 20.65)
     return detector
@@ -142,38 +144,34 @@ def InitSample():
 
 
 def RunSim(_simulation):
-    t1_start = process_time.default_timer()
-    _simulation.getOptions().setNumberOfBatches(1)
-    _simulation.getOptions().setNumberOfThreads(multiprocessing.cpu_count())
-    
-    
-    
-    #print(_simulation.numberOfSimulationElements())
-    
-    
-    
+    import ba_plot
+    #t1_start = process_time.default_timer()
+    #_simulation.getOptions().setNumberOfBatches(10)
+    #_simulation.getOptions().setNumberOfThreads(6)  
+    #print(_simulation.numberOfSimulationElements())  
     _simulation.getOptions().setUseAvgMaterials(True)
     _simulation.getOptions().setIncludeSpecular(False)
+    #_simulation.getOptions().setMonteCarloIntegration(False)
+
     background = ba.ConstantBackground(5e+01)
     _simulation.setBackground(background)
-    _simulation.runSimulation()
-    
-    
-    
-    result = _simulation.result()   
-    hist = result.histogram2d(ba.Axes.QSPACE)
-    resultarr = hist.array()
-    resultAll.append(resultarr)
-    t1_stop = process_time.default_timer()
+    ba_plot.run_and_plot(_simulation)
+    #_simulation.runSimulation()  
+    #result = _simulation.result()   
+    #hist = result.histogram2d(ba.Axes.QSPACE)
+    #resultarr = hist.array()
+    #resultAll.append(resultarr)
+    #t1_stop = process_time.default_timer()
     #print("Sim_ " ,t1_stop-t1_start)
     #return result, hist, resultarr
 
 
 
 def StartSim(thrId):
-    print("\n ThreadStart " ,thrId)
+    #print("\n ThreadStart " ,thrId)
     RunSim(InitSim(InitSample(), InitBeam(), InitDetector()))
-    print("\n ThreadEnd " ,thrId)
+    #print("\n ThreadEnd " ,thrId)
+    return ("DONE " ,thrId)
     #fig = plt.figure(figsize=(6, 3.2))
     
    # ax = fig.add_subplot()
@@ -183,17 +181,24 @@ def StartSim(thrId):
 
 
 def Test():
-    print(threading.activeCount())
-    t1_start = process_time.default_timer()
+    # print(threading.activeCount())
+    # t1_start = process_time.default_timer()
+    # with concurrent.futures.ProcessPoolExecutor() as executer:
+    #     results = [executer.submit(StartSim,x) for x in range(10)]
+    # for f in concurrent.futures.as_completed(results):
+    #     print(f.result())
     
-    threads = list()
+    
+    
+    
+    #threads = list()
     #main_thread = threading.currentThread()
-    for index in range(threading.activeCount()):
-        x = threading.Thread(target=StartSim, args=(index,))
-        threads.append(x)
-        #x.start()
-    for j in threads:
-        j.start()
+    # for index in range(threading.activeCount()):
+    #     x = threading.Thread(target=StartSim, args=(index,))
+    #     threads.append(x)
+    #     #x.start()
+    # for j in threads:
+    #     j.start()
 
     # # Ensure all of the processes have finished
     # for j in threads:
@@ -206,12 +211,12 @@ def Test():
     
     
 def TestNormal():
-    print( len(resultAll))
-    # t1_start = process_time.default_timer()
-    # for index in range(threading.activeCount()):
-    #     StartSim(1)
-    # t1_stop = process_time.default_timer()
-    # print("\n NOThreading " ,t1_stop-t1_start)
+    #print( len(resultAll))
+    t1_start = process_time.default_timer()
+    for index in range(2):
+         print(StartSim(index))
+    t1_stop = process_time.default_timer()
+    print("\n NOThreading " ,t1_stop-t1_start)
 
 
 

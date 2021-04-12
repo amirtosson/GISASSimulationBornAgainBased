@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Apr  6 11:12:24 2021
-
-@author: Tosson
+@author:    Amir Tosson
+@license:   GNU General Public License v3 or higher
+@copyright: Universität Siegen, Deutschland
+@email:     tosson@physik.uni-siegen.de   
 """
 
+from PyQt5 import QtWidgets
 import SiegMainWindow as _mainWin 
 import sys
-from PyQt5.QtWidgets import QApplication
 
 def main():
-
-    app = QApplication(sys.argv)
-
+    app = QtWidgets.QApplication(sys.argv)
     mw = _mainWin.SiegMainWindow()
-    mw.show()
+    mw.show();
     sys.exit(app.exec_())
-
 
 if __name__ == '__main__':
     main()
