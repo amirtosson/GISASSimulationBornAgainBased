@@ -35,13 +35,18 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         uic.loadUi("siegmainwindow.ui", self)
         self.fullscreenAction.triggered.connect(self.FullscreenAction)
         self.randGroupBox.setHidden(True)
+        self.diffGroupBox.setHidden(True)
+        self.configInitImgToolButton.setHidden(True)
         self.configSampleButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
+        self.configInitImgToolButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.configDetectorButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.configSimButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.configBeamButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.submitButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_ArrowRight')))
         self.autoRandCheckBox.stateChanged.connect(self.UseAutomaticRandomization)
+        self.incDiffCheckBox.stateChanged.connect(self.UseDifference)
         self.configSampleButton.clicked.connect(self.OpenSamplePage)
+        self.configInitImgToolButton.clicked.connect(self.OpenInitImgPage)
         self.configDetectorButton.clicked.connect(self.OpenDetectorPage)
         self.configBeamButton.clicked.connect(self.OpenBeamPage)
         self.configSimButton.clicked.connect(self.OpenSimPage)
@@ -49,6 +54,8 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.setButton.clicked.connect(self.SetLayers)
         self.tabWidget.currentChanged.connect(self.SubmitButtonText)
         self.submitButton.clicked.connect(self.SumbitUserInput)
+        self.sampleTypeComboBox.currentIndexChanged.connect(self.SampleTypeChanged)
+
 
 
 
@@ -67,7 +74,15 @@ class SiegMainWindow(QtWidgets.QMainWindow):
             self.setButton.setEnabled(False)
         else:
            self.randGroupBox.setHidden(True)
-    
+
+    def UseDifference(self):
+        if self.incDiffCheckBox.isChecked():
+            self.diffGroupBox.setHidden(False)
+            self.setButton.setEnabled(False)
+            self.configInitImgToolButton.setHidden(False)
+        else:
+           self.diffGroupBox.setHidden(True)
+           self.configInitImgToolButton.setHidden(True)
     
     def SubmitButtonText(self, ind):
         self.submitButton.setEnabled(True)
@@ -77,6 +92,8 @@ class SiegMainWindow(QtWidgets.QMainWindow):
             self.submitButton.setText("Submit detector")
         elif ind == 2:
             self.submitButton.setText("Submit beam")
+        elif ind == 4:
+            self.submitButton.setText("Generate init-img")
         else:   
             self.submitButton.setText("Start simulation")
             if not self.simIsReady or not self.sampleIsReady or not self.beamIsReady or not self.detectorIsReady:
@@ -98,6 +115,20 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     def OpenSimPage(self):                                              
         self.tabWidget.setCurrentIndex(3)
         self.SubmitButtonText(3)
+        
+    def SampleTypeChanged(self, ind):                                              
+        if ind == 0:
+            self.autoRandCheckBox.setHidden(False)
+            self.incDiffCheckBox.setHidden(False) 
+        elif ind == 1:
+            self.autoRandCheckBox.setHidden(True)
+            self.incDiffCheckBox.setHidden(True)
+            self.autoRandCheckBox.setCheckState(False)
+            self.incDiffCheckBox.setCheckState(False) 
+        
+    def OpenInitImgPage(self):                                              
+        self.tabWidget.setCurrentIndex(4)
+        self.SubmitButtonText(4)
         
     def UpdateTODOButtonsIcons(self):
         if self.sampleIsReady:
