@@ -6,6 +6,15 @@
 @email:     tosson@physik.uni-siegen.de   
 """
 
+"""
+summary:    the main 
+
+name:       main
+
+date:       01-04-2021
+     
+"""
+
 from PyQt5 import QtWidgets
 import SiegMainWindow as _mainWin 
 import sys

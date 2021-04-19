@@ -5,6 +5,16 @@
 @copyright: Universität Siegen, Deutschland
 @email:     tosson@physik.uni-siegen.de   
 """
+
+"""
+summary:    this model contains the controls and APIs of the 
+            BornAgain-based simulation  
+
+name:       SiegMainWindow
+
+date:       01-04-2021
+     
+"""
 import bornagain as ba
 from bornagain import deg, nm
 from random import randint

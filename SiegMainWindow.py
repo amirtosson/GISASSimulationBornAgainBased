@@ -5,6 +5,16 @@
 @copyright: Universität Siegen, Deutschland
 @email:     tosson@physik.uni-siegen.de   
 """
+
+"""
+summary:    this model contains the controls and APIs of the 
+            main-window 
+
+name:       SiegMainWindow
+
+date:       01-04-2021
+     
+"""
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import uic
 import SiegSimulationControls as _siegSim 
