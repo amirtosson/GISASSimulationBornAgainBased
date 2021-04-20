@@ -27,28 +27,39 @@ from numba import cuda
 import numpy as np
 import threading
 import concurrent.futures
+import SiegSample as _siegSample
 t1_start=0
 t1_stop=0
 
 
 
-class SiegSimulationControls(object):
+class SiegSimulationControls():
     resultAll = []
-    def __init__(self):
+    def __init__(self, sample = _siegSample.SiegSample(1)):
         super().__init__
+        self.Sample = sample
+
+
+    @property
+    def Sample(self):
+        return self._sample
     
-    def InitBeam():
+    @Sample.setter
+    def Sample(self, sample):
+        self._sample = sample
+    
+    def InitBeam(self):
         direction = ba.Direction(0.64*deg, 0.0*deg)
         beam = ba.Beam(1e+16*0.3/80, 0.14073*nm, direction) 
         return beam
         
-    def InitDetector():
+    def InitDetector(self):
         detector = ba.RectangularDetector(1024, 15, 1024, 51.2)
         detector.setResolutionFunction(ba.ResolutionFunction2DGaussian(0.02, 0.02))
         detector.setPerpendicularToReflectedBeam(1277.0, 0.75, 20.65)
         return detector
     
-    def InitSim(_sample, _beam, _detector):
+    def InitSim(self,_sample, _beam, _detector):
         sim = ba.GISASSimulation(_beam, _sample, _detector)
         sim.getOptions().setUseAvgMaterials(True)
         sim.getOptions().setIncludeSpecular(False)
@@ -56,7 +67,7 @@ class SiegSimulationControls(object):
         sim.setBackground(background)
         return sim
     
-    def InitSample():
+    def InitSample(self):
         t1_start = process_time.default_timer()
         #print("starting")
         dis1=(1+0.2*randint(0,10))*1e-05
@@ -155,9 +166,21 @@ class SiegSimulationControls(object):
         t1_stop = process_time.default_timer()
         #print("Sample_ " ,t1_stop-t1_start)
         return multiLayer_1
+
+
+
+    def InitSampleSingle(self):
+        multiLayer_1 = ba.MultiLayer()
+        multiLayer_1.setCrossCorrLength(2000)    
+        for i in range(len(self.Sample.layersData)):
+            print(self.Sample.layersData[i][0])
+            multiLayer_1.addLayerWithTopRoughness(ba.Layer( ba.HomogeneousMaterial("TaO"+str(i), 0.2*self.Sample.layersData[i][0]*1e-05, 3.3e-7), self.Sample.layersData[i][1]), ba.LayerRoughness(0.46,0.6, 30.0*nm))        
+        return multiLayer_1
+
+
     
     
-    def RunSim(_simulation):
+    def RunSim(self,_simulation):
         import ba_plot
         #t1_start = process_time.default_timer()
         #_simulation.getOptions().setNumberOfBatches(10)
@@ -177,17 +200,18 @@ class SiegSimulationControls(object):
         #resultAll.append(resultarr)
         #t1_stop = process_time.default_timer()
         #print("Sim_ " ,t1_stop-t1_start)
-        #return result, hist, resultarr
+        #return resultarr
     
     
     
-    def StartSim(thrId,self):
+    def StartSim(self):
         #print("\n ThreadStart " ,thrId)
-        self.RunSim(self.InitSim(self.InitSample(), self.InitBeam(), self.InitDetector()))
+        #self.RunSim(self.InitSim(self.InitSample(), self.InitBeam(), self.InitDetector()))
         #print("\n ThreadEnd " ,thrId)
-        return ("DONE " ,thrId)
+        #return ("DONE ")
         #fig = plt.figure(figsize=(6, 3.2))
-        
+        self.RunSim(self.InitSim(self.InitSample(), self.InitBeam(), self.InitDetector()))
+        return ("DONE ")
        # ax = fig.add_subplot()
        # ax.set_title('colorMap')
         #plt.imshow(resArr)
@@ -196,11 +220,11 @@ class SiegSimulationControls(object):
     
     def Test(self):
         # print(threading.activeCount())
-        # t1_start = process_time.default_timer()
-        # with concurrent.futures.ProcessPoolExecutor() as executer:
-        #     results = [executer.submit(StartSim,x) for x in range(10)]
-        # for f in concurrent.futures.as_completed(results):
-        #     print(f.result())
+        t1_start = process_time.default_timer()
+        with concurrent.futures.ProcessPoolExecutor() as executer:
+            results = [executer.submit(self.StartSim) for x in range(4)]
+        for f in concurrent.futures.as_completed(results):
+            print(f.result())
         
         
         
@@ -227,14 +251,15 @@ class SiegSimulationControls(object):
     def TestNormal(self):
         #print( len(resultAll))
         t1_start = process_time.default_timer()
-        for index in range(2):
-             print(self.StartSim(index))
+        for index in range(4):
+             print(self.StartSim())
         t1_stop = process_time.default_timer()
         print("\n NOThreading " ,t1_stop-t1_start)
     
     
     
-    
+    def GenerateRefData(self):
+        return self.StartSim()
     
 
 

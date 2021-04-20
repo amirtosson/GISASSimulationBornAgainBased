@@ -17,7 +17,21 @@ date:       01-04-2021
 """
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import uic
-import SiegSimulationControls as _siegSim 
+import time
+import numpy as np
+import sys
+import SiegSimulationControls as _siegSim
+import SiegSample as _siegSample
+from matplotlib.backends.qt_compat import QtCore, QtWidgets
+if int(QtCore.qVersion()[0]) > 4:
+    from matplotlib.backends.backend_qt5agg import (
+        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+else:
+    from matplotlib.backends.backend_qt4agg import (
+        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.figure import Figure
+
+
 
 
 class SiegMainWindow(QtWidgets.QMainWindow):
@@ -33,6 +47,23 @@ class SiegMainWindow(QtWidgets.QMainWindow):
 
     def initUI(self):
         uic.loadUi("siegmainwindow.ui", self)
+        # which defines a single set of axes as self.axes.
+        layout = QtWidgets.QVBoxLayout(self.plotWidget)
+        static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
+        layout.addWidget(static_canvas)
+
+        dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
+        layout.addWidget(dynamic_canvas)
+        self.addToolBar(QtCore.Qt.BottomToolBarArea,
+                        NavigationToolbar(dynamic_canvas, self))
+
+        self._static_ax = static_canvas.figure.subplots()
+        t = np.linspace(0, 10, 501)
+        self._static_ax.plot(t, np.tan(t), ".")
+        self._timer = dynamic_canvas.new_timer(
+            100, [(self._update_canvas, (), {})])
+        self._timer.start()
+        self._dynamic_ax = dynamic_canvas.figure.subplots()
         self.fullscreenAction.triggered.connect(self.FullscreenAction)
         self.randGroupBox.setHidden(True)
         self.diffGroupBox.setHidden(True)
@@ -55,8 +86,6 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.tabWidget.currentChanged.connect(self.SubmitButtonText)
         self.submitButton.clicked.connect(self.SumbitUserInput)
         self.sampleTypeComboBox.currentIndexChanged.connect(self.SampleTypeChanged)
-
-
 
 
     def speaking_method(self):                                              
@@ -181,17 +210,26 @@ class SiegMainWindow(QtWidgets.QMainWindow):
             if self.autoRandCheckBox.isChecked():
                 self.layerTable.setItem(row, 2, QtWidgets.QTableWidgetItem("RANDOM " +  str(self.rndMatrix[0]) + ":" + str(self.rndMatrix[1])))
                 self.layerTable.setItem(row, 3, QtWidgets.QTableWidgetItem("RANDOM " +  str(self.rndMatrix[2]) + ":" + str(self.rndMatrix[3])))
+                self.layerTable.setItem(row, 4, QtWidgets.QTableWidgetItem(str(0.0)))
             else:
                 self.layerTable.setItem(row, 2, QtWidgets.QTableWidgetItem(str(0.0)))
                 self.layerTable.setItem(row, 3, QtWidgets.QTableWidgetItem(str(0.0)))
+                self.layerTable.setItem(row, 4, QtWidgets.QTableWidgetItem(str(0.0)))
 
     def SumbitUserInput(self):
-       switcher = {0: self.SubmitSample(), 1: self.SubmitDetector(), 2: self.SubmitBeam(), 3: self.StartSim()} 
-       func = switcher.get(0) 
-       func
+       switcher = {0: self.SubmitSample, 1: self.SubmitDetector, 2: self.SubmitBeam, 3: self.StartSim} 
+       func = switcher.get(0)
+       func()
        
     def SubmitSample(self):
-        print("SubmitSample")
+        s = _siegSample.SiegSample(self.numOfLayerSpinBox.value())
+        T = []
+        for i in range(self.layerTable.rowCount()):
+            T.append([float(self.layerTable.item(i,2).text()), float(self.layerTable.item(i,3).text()), float(self.layerTable.item(i,4).text())])
+
+        s.layersData = T
+        sim =_siegSim.SiegSimulationControls(s)
+        print(sim.GenerateRefData())
         
     def SubmitBeam(self):
         print("SubmitBeam")       
@@ -202,4 +240,10 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     def StartSim(self):
         print("StartSim")        
         
-        
+
+    def _update_canvas(self):
+        self._dynamic_ax.clear()
+        t = np.linspace(0, 10, 101)
+        # Shift the sinusoid as a function of time.
+        self._dynamic_ax.plot(t, np.sin(t + time.time()))
+        self._dynamic_ax.figure.canvas.draw()        
