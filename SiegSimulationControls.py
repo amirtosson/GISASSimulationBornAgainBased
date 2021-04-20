@@ -171,9 +171,12 @@ class SiegSimulationControls():
 
     def InitSampleSingle(self):
         multiLayer_1 = ba.MultiLayer()
-        multiLayer_1.setCrossCorrLength(2000)    
+        multiLayer_1.setCrossCorrLength(2000) 
+        
+        material_1 = ba.HomogeneousMaterial("Air", 0.0, 0.0)
+        layer_1 = ba.Layer(material_1)
+        multiLayer_1.addLayer(layer_1)
         for i in range(len(self.Sample.layersData)):
-            print(self.Sample.layersData[i][0])
             multiLayer_1.addLayerWithTopRoughness(ba.Layer( ba.HomogeneousMaterial("TaO"+str(i), 0.2*self.Sample.layersData[i][0]*1e-05, 3.3e-7), self.Sample.layersData[i][1]), ba.LayerRoughness(0.46,0.6, 30.0*nm))        
         return multiLayer_1
 
@@ -192,15 +195,15 @@ class SiegSimulationControls():
     
         background = ba.ConstantBackground(5e+01)
         _simulation.setBackground(background)
-        ba_plot.run_and_plot(_simulation)
-        #_simulation.runSimulation()  
-        #result = _simulation.result()   
-        #hist = result.histogram2d(ba.Axes.QSPACE)
-        #resultarr = hist.array()
+        #ba_plot.run_and_plot(_simulation)
+        _simulation.runSimulation()  
+        result = _simulation.result()   
+        hist = result.histogram2d(ba.Axes.QSPACE)
+        resultarr = hist.array()
         #resultAll.append(resultarr)
         #t1_stop = process_time.default_timer()
         #print("Sim_ " ,t1_stop-t1_start)
-        #return resultarr
+        return resultarr
     
     
     
@@ -210,8 +213,8 @@ class SiegSimulationControls():
         #print("\n ThreadEnd " ,thrId)
         #return ("DONE ")
         #fig = plt.figure(figsize=(6, 3.2))
-        self.RunSim(self.InitSim(self.InitSample(), self.InitBeam(), self.InitDetector()))
-        return ("DONE ")
+        return self.RunSim(self.InitSim(self.InitSampleSingle(), self.InitBeam(), self.InitDetector()))
+        #return ("DONE ")
        # ax = fig.add_subplot()
        # ax.set_title('colorMap')
         #plt.imshow(resArr)
