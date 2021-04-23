@@ -16,8 +16,9 @@ date:       01-04-2021
 """
 
 from PyQt5 import QtWidgets
-import SiegMainWindow as _mainWin 
+import SiegMainWindow as _mainWin
 import sys
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
@@ -25,14 +26,6 @@ def main():
     mw.show();
     sys.exit(app.exec_())
 
+
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
-

@@ -184,7 +184,7 @@ class SiegSimulationControls():
     
     
     def RunSim(self,_simulation):
-        import ba_plot
+        #import ba_plot
         #t1_start = process_time.default_timer()
         #_simulation.getOptions().setNumberOfBatches(10)
         #_simulation.getOptions().setNumberOfThreads(6)  
@@ -207,13 +207,16 @@ class SiegSimulationControls():
     
     
     
-    def StartSim(self):
+    def StartSim(self, isReference= False):
         #print("\n ThreadStart " ,thrId)
         #self.RunSim(self.InitSim(self.InitSample(), self.InitBeam(), self.InitDetector()))
         #print("\n ThreadEnd " ,thrId)
         #return ("DONE ")
         #fig = plt.figure(figsize=(6, 3.2))
-        return self.RunSim(self.InitSim(self.InitSampleSingle(), self.InitBeam(), self.InitDetector()))
+        if isReference:
+            return self.RunSim(self.InitSim(self.InitSampleSingle(), self.InitBeam(), self.InitDetector()))
+        else:
+            return self.RunSim(self.InitSim(self.InitSample(), self.InitBeam(), self.InitDetector()))
         #return ("DONE ")
        # ax = fig.add_subplot()
        # ax.set_title('colorMap')
@@ -222,34 +225,13 @@ class SiegSimulationControls():
     
     
     def Test(self):
-        # print(threading.activeCount())
         t1_start = process_time.default_timer()
         with concurrent.futures.ProcessPoolExecutor() as executer:
             results = [executer.submit(self.StartSim) for x in range(4)]
         for f in concurrent.futures.as_completed(results):
-            print(f.result())
-        
-        
-        
-        
-        #threads = list()
-        #main_thread = threading.currentThread()
-        # for index in range(threading.activeCount()):
-        #     x = threading.Thread(target=StartSim, args=(index,))
-        #     threads.append(x)
-        #     #x.start()
-        # for j in threads:
-        #     j.start()
-    
-        # # Ensure all of the processes have finished
-        # for j in threads:
-        #     j.join()    
-            
+            print(f.result())            
         t1_stop = process_time.default_timer()
         print("\n ThreadingT " ,t1_stop-t1_start)
-        self.TestNormal()
-        
-        
         
     def TestNormal(self):
         #print( len(resultAll))
@@ -258,11 +240,9 @@ class SiegSimulationControls():
              print(self.StartSim())
         t1_stop = process_time.default_timer()
         print("\n NOThreading " ,t1_stop-t1_start)
-    
-    
-    
+      
     def GenerateRefData(self):
-        return self.StartSim()
+        return self.StartSim(True)
     
 
 
