@@ -226,8 +226,8 @@ class SiegSimulationControls():
     
     def Test(self):
         t1_start = process_time.default_timer()
-        with concurrent.futures.ProcessPoolExecutor() as executer:
-            results = [executer.submit(self.StartSim) for x in range(4)]
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = [executor.submit(self.StartSim) for x in range(4)]
         for f in concurrent.futures.as_completed(results):
             print(f.result())            
         t1_stop = process_time.default_timer()

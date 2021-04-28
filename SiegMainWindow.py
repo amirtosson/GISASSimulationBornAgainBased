@@ -23,6 +23,7 @@ import sys
 import SiegSimulationControls as _siegSim
 import SiegSample as _siegSample
 from matplotlib.backends.qt_compat import QtCore, QtWidgets
+
 if int(QtCore.qVersion()[0]) > 4:
     from matplotlib.backends.backend_qt5agg import (
         FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
@@ -32,15 +33,17 @@ else:
 from matplotlib.figure import Figure
 
 
-
-
 class SiegMainWindow(QtWidgets.QMainWindow):
     sampleIsReady = False
     detectorIsReady = False
     simIsReady = False
     beamIsReady = False
-    rndMatrix = [0,0,0,0]
+    rndMatrix = [0, 0, 0, 0]
     rndParasAreOK = False
+    RefImg = [ ]
+    static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
+    _static_ax = static_canvas.figure.subplots()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.initUI()
@@ -49,17 +52,11 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         uic.loadUi("siegmainwindow.ui", self)
         # which defines a single set of axes as self.axes.
         layout = QtWidgets.QVBoxLayout(self.plotWidget)
-        static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
-        layout.addWidget(static_canvas)
-
+        # static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
+        layout.addWidget(self.static_canvas)
         dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         layout.addWidget(dynamic_canvas)
-        self.addToolBar(QtCore.Qt.BottomToolBarArea,
-                        NavigationToolbar(dynamic_canvas, self))
-
-        self._static_ax = static_canvas.figure.subplots()
-        t = np.linspace(0, 10, 501)
-        self._static_ax.plot(t, np.tan(t), ".")
+        self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(dynamic_canvas, self))
         self._timer = dynamic_canvas.new_timer(
             100, [(self._update_canvas, (), {})])
         self._timer.start()
@@ -69,7 +66,8 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.diffGroupBox.setHidden(True)
         self.configInitImgToolButton.setHidden(True)
         self.configSampleButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
-        self.configInitImgToolButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
+        self.configInitImgToolButton.setIcon(
+            self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.configDetectorButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.configSimButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.configBeamButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
@@ -87,22 +85,21 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.submitButton.clicked.connect(self.SumbitUserInput)
         self.sampleTypeComboBox.currentIndexChanged.connect(self.SampleTypeChanged)
 
-
-    def speaking_method(self):                                              
+    def speaking_method(self):
         _siegSim.Test()
-        
-    def FullscreenAction(self):                                              
+
+    def FullscreenAction(self):
         if self.isFullScreen():
             self.showNormal()
         else:
             self.showFullScreen()
-            
+
     def UseAutomaticRandomization(self):
         if self.autoRandCheckBox.isChecked():
             self.randGroupBox.setHidden(False)
             self.setButton.setEnabled(False)
         else:
-           self.randGroupBox.setHidden(True)
+            self.randGroupBox.setHidden(True)
 
     def UseDifference(self):
         if self.incDiffCheckBox.isChecked():
@@ -110,9 +107,9 @@ class SiegMainWindow(QtWidgets.QMainWindow):
             self.setButton.setEnabled(False)
             self.configInitImgToolButton.setHidden(False)
         else:
-           self.diffGroupBox.setHidden(True)
-           self.configInitImgToolButton.setHidden(True)
-    
+            self.diffGroupBox.setHidden(True)
+            self.configInitImgToolButton.setHidden(True)
+
     def SubmitButtonText(self, ind):
         self.submitButton.setEnabled(True)
         if ind == 0:
@@ -123,63 +120,66 @@ class SiegMainWindow(QtWidgets.QMainWindow):
             self.submitButton.setText("Submit beam")
         elif ind == 4:
             self.submitButton.setText("Generate init-img")
-        else:   
+        else:
             self.submitButton.setText("Start simulation")
             if not self.simIsReady or not self.sampleIsReady or not self.beamIsReady or not self.detectorIsReady:
                 self.submitButton.setEnabled(False)
-                
-    
-    def OpenSamplePage(self):                                              
+
+    def OpenSamplePage(self):
         self.tabWidget.setCurrentIndex(0)
         self.SubmitButtonText(0)
-    
-    def OpenDetectorPage(self):                                              
-        self.tabWidget.setCurrentIndex(1) 
+
+    def OpenDetectorPage(self):
+        self.tabWidget.setCurrentIndex(1)
         self.SubmitButtonText(1)
-    
-    def OpenBeamPage(self):                                              
-        self.tabWidget.setCurrentIndex(2) 
+
+    def OpenBeamPage(self):
+        self.tabWidget.setCurrentIndex(2)
         self.SubmitButtonText(2)
-    
-    def OpenSimPage(self):                                              
+
+    def OpenSimPage(self):
         self.tabWidget.setCurrentIndex(3)
         self.SubmitButtonText(3)
-        
-    def SampleTypeChanged(self, ind):                                              
+
+    def SampleTypeChanged(self, ind):
         if ind == 0:
             self.autoRandCheckBox.setHidden(False)
-            self.incDiffCheckBox.setHidden(False) 
+            self.incDiffCheckBox.setHidden(False)
         elif ind == 1:
             self.autoRandCheckBox.setHidden(True)
             self.incDiffCheckBox.setHidden(True)
             self.autoRandCheckBox.setCheckState(False)
-            self.incDiffCheckBox.setCheckState(False) 
-        
-    def OpenInitImgPage(self):                                              
+            self.incDiffCheckBox.setCheckState(False)
+
+    def OpenInitImgPage(self):
         self.tabWidget.setCurrentIndex(4)
         self.SubmitButtonText(4)
-        
+
     def UpdateTODOButtonsIcons(self):
         if self.sampleIsReady:
-            self.configSampleButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogApplyButton')))
+            self.configSampleButton.setIcon(
+                self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogApplyButton')))
         else:
-            self.configSampleButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
+            self.configSampleButton.setIcon(
+                self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
 
         if self.detectorIsReady:
-            self.configDetectorButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogApplyButton')))
+            self.configDetectorButton.setIcon(
+                self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogApplyButton')))
         else:
-            self.configDetectorButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
-            
-        if self.beamIsReady:      
+            self.configDetectorButton.setIcon(
+                self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
+
+        if self.beamIsReady:
             self.configBeamButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogApplyButton')))
-        else:                         
+        else:
             self.configBeamButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
-  
-        if self.simIsReady:      
+
+        if self.simIsReady:
             self.configSimButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogApplyButton')))
-        else:                         
+        else:
             self.configSimButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
-            
+
     def SubmitRandomizationPara(self):
         self.rndMatrix[0] = self.disSpinBoxMin.value()
         self.rndMatrix[1] = self.disSpinBoxMax.value()
@@ -191,25 +191,27 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         else:
             self.errorText.setText("")
             self.setButton.setEnabled(True)
-            
-    def CheckRndParas(self,rndArr):   
+
+    def CheckRndParas(self, rndArr):
         if rndArr[1] >= rndArr[0]:
             return True
         else:
             return False
-        
+
     def SetLayers(self):
         numRows = self.numOfLayerSpinBox.value()
         self.layerTable.setRowCount(numRows)
         for row in range(self.numOfLayerSpinBox.value()):
-            #self.layerTable.insertRow(self.layerTable.rowCount())
-            item = QtWidgets.QTableWidgetItem(str(row+1))
+            # self.layerTable.insertRow(self.layerTable.rowCount())
+            item = QtWidgets.QTableWidgetItem(str(row + 1))
             item.setFlags(QtCore.Qt.ItemIsEnabled)
             self.layerTable.setItem(row, 0, item)
-            self.layerTable.setItem(row, 1, QtWidgets.QTableWidgetItem("Layer_" +  str(row+1)))
+            self.layerTable.setItem(row, 1, QtWidgets.QTableWidgetItem("Layer_" + str(row + 1)))
             if self.autoRandCheckBox.isChecked():
-                self.layerTable.setItem(row, 2, QtWidgets.QTableWidgetItem("RANDOM " +  str(self.rndMatrix[0]) + ":" + str(self.rndMatrix[1])))
-                self.layerTable.setItem(row, 3, QtWidgets.QTableWidgetItem("RANDOM " +  str(self.rndMatrix[2]) + ":" + str(self.rndMatrix[3])))
+                self.layerTable.setItem(row, 2, QtWidgets.QTableWidgetItem(
+                    "RANDOM " + str(self.rndMatrix[0]) + ":" + str(self.rndMatrix[1])))
+                self.layerTable.setItem(row, 3, QtWidgets.QTableWidgetItem(
+                    "RANDOM " + str(self.rndMatrix[2]) + ":" + str(self.rndMatrix[3])))
                 self.layerTable.setItem(row, 4, QtWidgets.QTableWidgetItem(str(0.0)))
             else:
                 self.layerTable.setItem(row, 2, QtWidgets.QTableWidgetItem(str(0.0)))
@@ -217,33 +219,36 @@ class SiegMainWindow(QtWidgets.QMainWindow):
                 self.layerTable.setItem(row, 4, QtWidgets.QTableWidgetItem(str(0.0)))
 
     def SumbitUserInput(self):
-       switcher = {0: self.SubmitSample, 1: self.SubmitDetector, 2: self.SubmitBeam, 3: self.StartSim} 
-       func = switcher.get(0)
-       func()
-       
+        switcher = {0: self.SubmitSample, 1: self.SubmitDetector, 2: self.SubmitBeam, 3: self.StartSim, 4: self.UpdateImg}
+        func = switcher.get(self.tabWidget.currentIndex())
+        func()
+
     def SubmitSample(self):
         s = _siegSample.SiegSample(self.numOfLayerSpinBox.value())
         T = []
         for i in range(self.layerTable.rowCount()):
-            T.append([float(self.layerTable.item(i,2).text()), float(self.layerTable.item(i,3).text()), float(self.layerTable.item(i,4).text())])
-
+           T.append([float(self.layerTable.item(i, 2).text()), float(self.layerTable.item(i, 3).text()), float(self.layerTable.item(i, 4).text())])
         s.layersData = T
-        sim =_siegSim.SiegSimulationControls(s)
-        print(sim.GenerateRefData())
-        
+        sim = _siegSim.SiegSimulationControls(s)
+        self.RefImg = sim.GenerateRefData()
+
     def SubmitBeam(self):
-        print("SubmitBeam")       
-        
+        print("SubmitBeam")
+
     def SubmitDetector(self):
-        print("SubmitDetector")        
-        
+        print("SubmitDetector")
+
     def StartSim(self):
-        print("StartSim")        
-        
+        print("StartSim")
+
+    def UpdateImg(self):
+        self._static_ax.clear()
+        self._static_ax.imshow(self.RefImg, interpolation='none')
+        self._static_ax.figure.canvas.draw()
 
     def _update_canvas(self):
         self._dynamic_ax.clear()
         t = np.linspace(0, 10, 101)
         # Shift the sinusoid as a function of time.
         self._dynamic_ax.plot(t, np.sin(t + time.time()))
-        self._dynamic_ax.figure.canvas.draw()        
+        self._dynamic_ax.figure.canvas.draw()

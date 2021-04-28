@@ -23,7 +23,7 @@ import sys
 def main():
     app = QtWidgets.QApplication(sys.argv)
     mw = _mainWin.SiegMainWindow()
-    mw.show();
+    mw.show()
     sys.exit(app.exec_())
 
 

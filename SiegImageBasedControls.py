@@ -19,13 +19,13 @@ from skimage import measure
 import numpy as np
 from math import log10, sqrt
 
+
 class SiegImageBasedControls(object):
     def __init__(self):
         super().__init__
         
        
     def MSE(imageA, imageB):
-        
         """
         Description
         -----------
@@ -43,12 +43,10 @@ class SiegImageBasedControls(object):
         MSE :   TYPE float
                 DESCRIPTION the MSE difference , the lower the error, the more "similar"
                 the two images are
-        """ 
+        """
         return np.mean((imageA.astype("float") - imageB.astype("float")) ** 2)
-        
-    
+
     def SSIM(imageA, imageB):
-        
         """
         Description
         -----------
@@ -65,12 +63,10 @@ class SiegImageBasedControls(object):
         -------
         SSIM :   TYPE float
                 DESCRIPTION the SSIM difference 
-        """ 
-        return measure.compare_ssim(imageA, imageB)    
-       
-    
+        """
+        return measure.compare_ssim(imageA, imageB)
+
     def PSNR(imageA, imageB, self):
-                
         """
         Description
         -----------
@@ -87,21 +83,8 @@ class SiegImageBasedControls(object):
         -------
         PNSR :   TYPE float
                 DESCRIPTION the PNSR difference 
-        """ 
+        """
         mse = self.MSE(imageA, imageB)
-        if(mse == 0):
+        if (mse == 0):
             return 100
-        return 20 * log10(255.0 / sqrt(mse))    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+        return 20 * log10(255.0 / sqrt(mse))
