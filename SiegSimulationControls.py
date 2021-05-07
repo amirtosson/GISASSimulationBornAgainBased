@@ -54,15 +54,15 @@ class SiegSimulationControls():
         return beam
         
     def InitDetector(self):
-        detector = ba.RectangularDetector(1024, 15, 1024, 51.2)
+        detector = ba.RectangularDetector(512, 26.6, 1024, 51.2)
         detector.setResolutionFunction(ba.ResolutionFunction2DGaussian(0.02, 0.02))
-        detector.setPerpendicularToReflectedBeam(1277.0, 0.75, 20.65)
+        detector.setPerpendicularToReflectedBeam(1277.0, 10.75, 20.65)
         return detector
     
     def InitSim(self,_sample, _beam, _detector):
         sim = ba.GISASSimulation(_beam, _sample, _detector)
         sim.getOptions().setUseAvgMaterials(True)
-        sim.getOptions().setIncludeSpecular(False)
+        sim.getOptions().setIncludeSpecular(True)
         background = ba.ConstantBackground(5e+01)
         sim.setBackground(background)
         return sim
@@ -154,14 +154,14 @@ class SiegSimulationControls():
         multiLayer_1.addLayerWithTopRoughness(layer_4, layerRoughness_3)
         multiLayer_1.addLayerWithTopRoughness(layer_5, layerRoughness_4)
         multiLayer_1.addLayerWithTopRoughness(layer_6, layerRoughness_5)
-        multiLayer_1.addLayerWithTopRoughness(layer_7, layerRoughness_6)
-        multiLayer_1.addLayerWithTopRoughness(layer_8, layerRoughness_7)
-        multiLayer_1.addLayerWithTopRoughness(layer_9, layerRoughness_8)
-        multiLayer_1.addLayerWithTopRoughness(layer_10, layerRoughness_9)
-        multiLayer_1.addLayerWithTopRoughness(layer_11, layerRoughness_10)
-        multiLayer_1.addLayerWithTopRoughness(layer_12, layerRoughness_11)
-        multiLayer_1.addLayerWithTopRoughness(layer_13, layerRoughness_12)
-        multiLayer_1.addLayerWithTopRoughness(layer_14, layerRoughness_13)
+        #multiLayer_1.addLayerWithTopRoughness(layer_7, layerRoughness_6)
+        #multiLayer_1.addLayerWithTopRoughness(layer_8, layerRoughness_7)
+        #multiLayer_1.addLayerWithTopRoughness(layer_9, layerRoughness_8)
+        #multiLayer_1.addLayerWithTopRoughness(layer_10, layerRoughness_9)
+        #multiLayer_1.addLayerWithTopRoughness(layer_11, layerRoughness_10)
+        #multiLayer_1.addLayerWithTopRoughness(layer_12, layerRoughness_11)
+        #multiLayer_1.addLayerWithTopRoughness(layer_13, layerRoughness_12)
+        #multiLayer_1.addLayerWithTopRoughness(layer_14, layerRoughness_13)
         multiLayer_1.addLayerWithTopRoughness(layer_15, layerRoughness_14)
         t1_stop = process_time.default_timer()
         #print("Sample_ " ,t1_stop-t1_start)
@@ -198,7 +198,7 @@ class SiegSimulationControls():
         #ba_plot.run_and_plot(_simulation)
         _simulation.runSimulation()  
         result = _simulation.result()   
-        hist = result.histogram2d(ba.Axes.QSPACE)
+        hist = result.histogram2d(ba.Axes.DEGREES)
         resultarr = hist.array()
         #resultAll.append(resultarr)
         #t1_stop = process_time.default_timer()
@@ -242,7 +242,7 @@ class SiegSimulationControls():
         print("\n NOThreading " ,t1_stop-t1_start)
       
     def GenerateRefData(self):
-        return self.StartSim(True)
+        return self.StartSim(False)
     
 
 

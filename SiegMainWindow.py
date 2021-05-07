@@ -17,12 +17,14 @@ date:       01-04-2021
 """
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import uic
+from PyQt5.QtGui import QPainter, QBrush, QPen
+from PyQt5.QtCore import Qt
 import time
 import numpy as np
 import sys
 import SiegSimulationControls as _siegSim
 import SiegSample as _siegSample
-from matplotlib.backends.qt_compat import QtCore, QtWidgets
+#from matplotlib.backends.qt_compat import QtCore, QtWidgets
 
 if int(QtCore.qVersion()[0]) > 4:
     from matplotlib.backends.backend_qt5agg import (
@@ -42,7 +44,11 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     rndParasAreOK = False
     RefImg = [ ]
     static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
+    dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     _static_ax = static_canvas.figure.subplots()
+
+
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -56,10 +62,11 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         layout.addWidget(self.static_canvas)
         dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         layout.addWidget(dynamic_canvas)
-        self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(dynamic_canvas, self))
-        self._timer = dynamic_canvas.new_timer(
-            100, [(self._update_canvas, (), {})])
-        self._timer.start()
+        self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.static_canvas, self))
+        self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.dynamic_canvas, self))
+        #self._timer = dynamic_canvas.new_timer(
+        #    100, [(self._update_canvas, (), {})])
+        #self._timer.start()
         self._dynamic_ax = dynamic_canvas.figure.subplots()
         self.fullscreenAction.triggered.connect(self.FullscreenAction)
         self.randGroupBox.setHidden(True)
@@ -87,6 +94,15 @@ class SiegMainWindow(QtWidgets.QMainWindow):
 
     def speaking_method(self):
         _siegSim.Test()
+
+
+    def onclick(self, event):
+        ix, iy = event.xdata, event.ydata
+        self._dynamic_ax.clear()
+        t = np.linspace(0, 10, 1024)
+        # Shift the sinusoid as a function of time.
+        self._dynamic_ax.plot(t, self.RefImg[:, int(ix)])
+        self._dynamic_ax.figure.canvas.draw()
 
     def FullscreenAction(self):
         if self.isFullScreen():
@@ -245,6 +261,9 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self._static_ax.clear()
         self._static_ax.imshow(self.RefImg, interpolation='none')
         self._static_ax.figure.canvas.draw()
+        self.static_canvas.mpl_connect('button_press_event', self.onclick)
+
+        #self.scene().addItem(QtGui.QGraphicsLineItem(QtCore.QLineF((200,100), (250,100))))
 
     def _update_canvas(self):
         self._dynamic_ax.clear()

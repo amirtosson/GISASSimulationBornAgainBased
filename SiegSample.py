@@ -7,7 +7,7 @@
 """
 
 """
-summary:    samole class contains all details of the sample
+summary:    sample class contains all details of the sample
 
 name:       SiegSample
 
