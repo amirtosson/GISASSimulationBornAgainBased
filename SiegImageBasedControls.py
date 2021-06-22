@@ -25,7 +25,7 @@ class SiegImageBasedControls(object):
         super().__init__
         
        
-    def MSE(imageA, imageB):
+    def MSE(self, imageA, imageB):
         """
         Description
         -----------
@@ -46,7 +46,7 @@ class SiegImageBasedControls(object):
         """
         return np.mean((imageA.astype("float") - imageB.astype("float")) ** 2)
 
-    def SSIM(imageA, imageB):
+    def SSIM(self, imageA, imageB):
         """
         Description
         -----------
@@ -66,7 +66,7 @@ class SiegImageBasedControls(object):
         """
         return measure.compare_ssim(imageA, imageB)
 
-    def PSNR(imageA, imageB, self):
+    def PSNR(self, imageA, imageB):
         """
         Description
         -----------
@@ -85,6 +85,6 @@ class SiegImageBasedControls(object):
                 DESCRIPTION the PNSR difference 
         """
         mse = self.MSE(imageA, imageB)
-        if (mse == 0):
+        if mse == 0:
             return 100
         return 20 * log10(255.0 / sqrt(mse))

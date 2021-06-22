@@ -17,6 +17,7 @@ date:       01-04-2021
 """
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import uic
+import csv
 from PyQt5.QtGui import QPainter, QBrush, QPen
 from PyQt5.QtCore import Qt
 import time
@@ -24,6 +25,8 @@ import numpy as np
 import sys
 import SiegSimulationControls as _siegSim
 import SiegSample as _siegSample
+from random import randint
+
 #from matplotlib.backends.qt_compat import QtCore, QtWidgets
 
 if int(QtCore.qVersion()[0]) > 4:
@@ -101,7 +104,12 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self._dynamic_ax.clear()
         t = np.linspace(0, 10, 1024)
         # Shift the sinusoid as a function of time.
-        self._dynamic_ax.plot(t, self.RefImg[:, int(ix)])
+        max_index_col = np.argmax(self.RefImg, axis=1)
+        print(max_index_col)
+        self._dynamic_ax.plot(t, self.RefImg[:, max_index_col[0]])
+        with open('data2.csv', 'a', encoding='UTF8', newline='') as fd:
+            np.savetxt(fd, self.RefImg[:, max_index_col[0]], delimiter=",")
+
         self._dynamic_ax.figure.canvas.draw()
 
     def FullscreenAction(self):
@@ -246,8 +254,29 @@ class SiegMainWindow(QtWidgets.QMainWindow):
            T.append([float(self.layerTable.item(i, 2).text()), float(self.layerTable.item(i, 3).text()), float(self.layerTable.item(i, 4).text())])
         s.layersData = T
         sim = _siegSim.SiegSimulationControls(s)
-        self.RefImg = sim.GenerateRefData()
+        import timeit as process_time
+        t1_start = process_time.default_timer()
 
+        disData = [0] * 20
+        thickData = [0] * 20
+        for i in range(20):
+            x = 1
+            y = 1
+            if i % 2 == 0:
+                x = 2
+                y = 6
+            dis_h = (x + 0.2 * randint(0, 10)) * 1e-05
+            thi_h = (y + (y / x) * 0.2 * randint(0, 10))
+            disData[i] = dis_h
+            thickData[i] = thi_h
+        for _ in range(1):
+            self.RefImg = sim.GenerateRefData(True, thickData, disData)
+            max_index_col = np.argmax(self.RefImg, axis=1)
+            with open('dataTEST.csv', 'a', encoding='UTF8', newline='') as fd:
+                np.savetxt(fd, self.RefImg[:, max_index_col[0]])
+                #np.savetxt(fd, self.RefImg[:, max_index_col[0]], delimiter=",")
+        t1_end = process_time.default_timer()
+        print(t1_end - t1_start)
     def SubmitBeam(self):
         print("SubmitBeam")
 
