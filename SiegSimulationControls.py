@@ -28,6 +28,7 @@ import numpy as np
 import threading
 import concurrent.futures
 import SiegSample as _siegSample
+import  SiegDetector as _siegDetector
 import csv
 
 
@@ -38,9 +39,10 @@ t1_stop=0
 
 class SiegSimulationControls():
     resultAll = []
-    def __init__(self, sample = _siegSample.SiegSample(1)):
+    def __init__(self, sample = _siegSample.SiegSample(1), detector = _siegDetector.SiegDetector(0)):
         super().__init__
         self.Sample = sample
+        self.Detector = detector
 
 
     @property
@@ -50,6 +52,14 @@ class SiegSimulationControls():
     @Sample.setter
     def Sample(self, sample):
         self._sample = sample
+
+    @property
+    def Detector(self):
+        return self._detector
+
+    @Detector.setter
+    def Detector(self, detector):
+        self._detector = detector
     
     def InitBeam(self):
         direction = ba.Direction(0.64*deg, 0.0*deg)
@@ -269,7 +279,8 @@ class SiegSimulationControls():
 
 
 
-
+    def TestVar(self):
+        print(self.Detector.resolutionFunction)
 
 
 

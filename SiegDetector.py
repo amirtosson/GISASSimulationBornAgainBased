@@ -18,17 +18,15 @@ import enum
 
 
 class DetectorType(enum.Enum):
-    RectangularDetector = 1
-    CircularDetector = 2
+    RectangularDetector = 0
+    CircularDetector = 1
 
 
 
 class SiegDetector(object):
-    def __init__(self, detectorType=1, resFunction1=0.2, resFunction2=0.2):
+    def __init__(self, detectorType=0):
         super().__init__
         self._detectorType = detectorType
-        self._resolutionFunction1 = resFunction1
-        self._resolutionFunction2 = resFunction2
 
     @property
     def detectorType(self):
@@ -39,18 +37,33 @@ class SiegDetector(object):
         self._detectorType = t
 
     @property
-    def resolutionFunction1(self):
-        return self._resolutionFunction1
+    def resolutionFunction(self):
+        return self._resolutionFunction
 
-    @resolutionFunction1.setter
-    def resolutionFunction1(self, resFunction1):
-        self._resolutionFunction1 = resFunction1
-
+    @resolutionFunction.setter
+    def resolutionFunction(self, rf):
+        self._resolutionFunction = rf
 
     @property
-    def resolutionFunction2(self):
-        return self._resolutionFunction2
+    def resolutionFunctionSigmaX(self):
+        return self._resolutionFunctionSigmaX
 
-    @resolutionFunction2.setter
-    def resolutionFunction2(self, resFunction2):
-        self._resolutionFunction2 = resFunction2
+    @resolutionFunctionSigmaX.setter
+    def resolutionFunctionSigmaX(self, sig_x):
+        self._resolutionFunctionSigmaX = sig_x
+
+    @property
+    def resolutionFunctionSigmaY(self):
+        return self._resolutionFunctionSigmaX
+
+    @resolutionFunctionSigmaY.setter
+    def resolutionFunctionSigmaY(self, sig_y):
+        self._resolutionFunctionSigmaY = sig_y
+
+    @property
+    def detectorDimensions(self):
+        return self._detectorDimensions
+
+    @detectorDimensions.setter
+    def detectorDimensions(self, dims):
+        self._detectorDimensions = dims

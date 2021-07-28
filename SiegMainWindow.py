@@ -25,6 +25,7 @@ import numpy as np
 import sys
 import SiegSimulationControls as _siegSim
 import SiegSample as _siegSample
+import SiegDetector as _siegDetector
 from random import randint
 
 #from matplotlib.backends.qt_compat import QtCore, QtWidgets
@@ -49,6 +50,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     _static_ax = static_canvas.figure.subplots()
+    _simControls = _siegSim.SiegSimulationControls();
 
 
 
@@ -253,10 +255,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         for i in range(self.layerTable.rowCount()):
            T.append([float(self.layerTable.item(i, 2).text()), float(self.layerTable.item(i, 3).text()), float(self.layerTable.item(i, 4).text())])
         s.layersData = T
-        sim = _siegSim.SiegSimulationControls(s)
-        import timeit as process_time
-        t1_start = process_time.default_timer()
-
+        self._simControls.Sample = s
         disData = [0] * 20
         thickData = [0] * 20
         for i in range(20):
@@ -270,18 +269,32 @@ class SiegMainWindow(QtWidgets.QMainWindow):
             disData[i] = dis_h
             thickData[i] = thi_h
         for _ in range(1):
-            self.RefImg = sim.GenerateRefData(True, thickData, disData)
+            self.RefImg = self._simControls.GenerateRefData(True, thickData, disData)
             max_index_col = np.argmax(self.RefImg, axis=1)
             with open('dataTEST.csv', 'a', encoding='UTF8', newline='') as fd:
                 np.savetxt(fd, self.RefImg[:, max_index_col[0]])
                 #np.savetxt(fd, self.RefImg[:, max_index_col[0]], delimiter=",")
-        t1_end = process_time.default_timer()
-        print(t1_end - t1_start)
+
     def SubmitBeam(self):
-        print("SubmitBeam")
+        self._simControls.TestVar()
+        print(self._simControls.Detector.resolutionFunction)
+
 
     def SubmitDetector(self):
-        print("SubmitDetector")
+        d = _siegDetector.SiegDetector(self.detectorTypeComboBox.currentIndex())
+        detector_dims = [0, 0, 0, 0]
+        print("done1")
+        detector_dims[0] = self.xBinSpinBox.value()
+        detector_dims[1] = self.yBinSpinBox.value()
+        detector_dims[2] = self.detectorWidthSpinBox.value()
+        detector_dims[3] = self.detectorHeightSpinBox.value()
+        print("done2")
+        d.detectorDimensions = detector_dims
+        d.resolutionFunction = self.resolutionFncTypeComboBox.currentIndex()
+        d.resolutionFunctionSigmaX = self.resFncSigmaXSpinBox.value()
+        d.resolutionFunctionSigmaY = self.resFncSigmaYSpinBox.value()
+        self._simControls.Detector = d
+        print("done")
 
     def StartSim(self):
         print("StartSim")

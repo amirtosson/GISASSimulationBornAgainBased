@@ -30,7 +30,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="sampleTab">
        <attribute name="title">
@@ -331,7 +331,7 @@
                <number>5</number>
               </property>
               <attribute name="horizontalHeaderVisible">
-               <bool>false</bool>
+               <bool>true</bool>
               </attribute>
               <attribute name="horizontalHeaderCascadingSectionResizes">
                <bool>false</bool>
@@ -573,7 +573,7 @@
                 <widget class="QDoubleSpinBox" name="detectorHeightSpinBox"/>
                </item>
                <item row="1" column="1">
-                <widget class="QSpinBox" name="yBinSpinBox_2"/>
+                <widget class="QSpinBox" name="yBinSpinBox"/>
                </item>
                <item row="0" column="1">
                 <widget class="QSpinBox" name="xBinSpinBox"/>
