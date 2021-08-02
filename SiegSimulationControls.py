@@ -274,67 +274,12 @@ class SiegSimulationControls():
       
     def GenerateRefData(self, onlyLayers=False, ThiDataUser=0, DisDataUser=0):
         return self.StartSim(False)
-    
-
-
 
 
     def TestVar(self):
         print(self.Detector.resolutionFunction)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#     driver.init()
-#     ngpus = driver.Device.count()
-#     for i in range(ngpus):
-#         t = gpuThread(i)
-#         t.start()
-#         t.join()
-
-# # Print the result
-#     print("data.count()")
-    
-    
-# @cuda.jit
-# def my_kernel(io_array):
-#     # Thread id in a 1D block
-#     tx = cuda.threadIdx.x
-#     # Block id in a 1D grid
-#     ty = cuda.blockIdx.x
-#     # Block width, i.e. number of threads per block
-#     bw = cuda.blockDim.x
-#     # Compute flattened index inside the array
-#     pos = tx + ty * bw
-#     if pos < io_array.size:  # Check array boundaries
-#         io_array[pos] *= 2 # do the computation    
-    
-    
-    
-# @cuda.jit
-# def SamplePrepParallel(io_array):    
-#     dis1=(1+0.2)*1e-05
-#     thi1=(1+0.6)
-#     tx = cuda.threadIdx.x
-#     io_array[tx] = thi1
-
-#     #layer_1 = ba.Layer(material_1)
-#     #multiLayer_1 = ba.MultiLayer()
-#     #multiLayer_1.setCrossCorrLength(2000)
-#     #multiLayer_1.addLayer(layer_1)
-    
 
 
 

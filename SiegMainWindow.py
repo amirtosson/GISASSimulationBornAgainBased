@@ -60,6 +60,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.initUI()
 
     def initUI(self):
+        #TODO: Set tooltips
         uic.loadUi("siegmainwindow.ui", self)
         # which defines a single set of axes as self.axes.
         layout = QtWidgets.QVBoxLayout(self.plotWidget)
@@ -93,6 +94,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.configSimButton.clicked.connect(self.OpenSimPage)
         self.randomParaOKButton.clicked.connect(self.SubmitRandomizationPara)
         self.setButton.clicked.connect(self.SetLayers)
+        #self.setButton.setToolTip("")
         self.tabWidget.currentChanged.connect(self.SubmitButtonText)
         self.submitButton.clicked.connect(self.SumbitUserInput)
         self.sampleTypeComboBox.currentIndexChanged.connect(self.SampleTypeChanged)
@@ -277,24 +279,20 @@ class SiegMainWindow(QtWidgets.QMainWindow):
 
     def SubmitBeam(self):
         self._simControls.TestVar()
-        print(self._simControls.Detector.resolutionFunction)
 
 
     def SubmitDetector(self):
         d = _siegDetector.SiegDetector(self.detectorTypeComboBox.currentIndex())
         detector_dims = [0, 0, 0, 0]
-        print("done1")
         detector_dims[0] = self.xBinSpinBox.value()
         detector_dims[1] = self.yBinSpinBox.value()
         detector_dims[2] = self.detectorWidthSpinBox.value()
         detector_dims[3] = self.detectorHeightSpinBox.value()
-        print("done2")
         d.detectorDimensions = detector_dims
         d.resolutionFunction = self.resolutionFncTypeComboBox.currentIndex()
         d.resolutionFunctionSigmaX = self.resFncSigmaXSpinBox.value()
         d.resolutionFunctionSigmaY = self.resFncSigmaYSpinBox.value()
         self._simControls.Detector = d
-        print("done")
 
     def StartSim(self):
         print("StartSim")
