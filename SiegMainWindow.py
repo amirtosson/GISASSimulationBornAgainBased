@@ -27,6 +27,7 @@ import SiegSimulationControls as _siegSim
 import SiegSample as _siegSample
 import SiegDetector as _siegDetector
 from random import randint
+from numpy import loadtxt
 
 #from matplotlib.backends.qt_compat import QtCore, QtWidgets
 
@@ -49,6 +50,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     RefImg = [ ]
     static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
+    user_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     _static_ax = static_canvas.figure.subplots()
     _simControls = _siegSim.SiegSimulationControls();
 
@@ -64,16 +66,24 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         uic.loadUi("siegmainwindow.ui", self)
         # which defines a single set of axes as self.axes.
         layout = QtWidgets.QVBoxLayout(self.plotWidget)
+ 
         # static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         layout.addWidget(self.static_canvas)
         dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         layout.addWidget(dynamic_canvas)
-        self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.static_canvas, self))
-        self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.dynamic_canvas, self))
+
+        #self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.static_canvas, self))
+        #self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.dynamic_canvas, self))
+        user_canvas = FigureCanvas(Figure(figsize=(10, 10)))
+        file_data_layout = QtWidgets.QVBoxLayout(self.controlWidget)
+        file_data_layout.addWidget(user_canvas)
+
         #self._timer = dynamic_canvas.new_timer(
         #    100, [(self._update_canvas, (), {})])
         #self._timer.start()
         self._dynamic_ax = dynamic_canvas.figure.subplots()
+        self._dynamic_ax2 = user_canvas.figure.subplots()
+
         self.fullscreenAction.triggered.connect(self.FullscreenAction)
         self.randGroupBox.setHidden(True)
         self.diffGroupBox.setHidden(True)
@@ -94,6 +104,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.configSimButton.clicked.connect(self.OpenSimPage)
         self.randomParaOKButton.clicked.connect(self.SubmitRandomizationPara)
         self.setButton.clicked.connect(self.SetLayers)
+        self.uploadFromFileButton.clicked.connect(self.UploadFile)
         #self.setButton.setToolTip("")
         self.tabWidget.currentChanged.connect(self.SubmitButtonText)
         self.submitButton.clicked.connect(self.SumbitUserInput)
@@ -140,6 +151,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
 
     def SubmitButtonText(self, ind):
         self.submitButton.setEnabled(True)
+        self.submitButton.setVisible(True)
         if ind == 0:
             self.submitButton.setText("Submit sample")
         elif ind == 1:
@@ -148,6 +160,8 @@ class SiegMainWindow(QtWidgets.QMainWindow):
             self.submitButton.setText("Submit beam")
         elif ind == 4:
             self.submitButton.setText("Generate init-img")
+        elif ind == 5:
+            self.submitButton.setVisible(False)
         else:
             self.submitButton.setText("Start simulation")
             if not self.simIsReady or not self.sampleIsReady or not self.beamIsReady or not self.detectorIsReady:
@@ -280,6 +294,19 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     def SubmitBeam(self):
         self._simControls.TestVar()
 
+    def UploadFile(self):
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setWindowTitle('Open Data File')
+        dialog.setNameFilter('Data files (*.txt)')
+        dialog.setDirectory(QtCore.QDir.currentPath())
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        if dialog.exec_() == QtWidgets.QDialog.Accepted:
+            file_full_path = str(dialog.selectedFiles()[0])
+        print(file_full_path)
+        lines = loadtxt(file_full_path, comments="#", delimiter=" ", unpack=False)
+        self._dynamic_ax2.clear()
+        self._dynamic_ax2.imshow(lines, interpolation='none')
+        self._dynamic_ax2.figure.canvas.draw()
 
     def SubmitDetector(self):
         d = _siegDetector.SiegDetector(self.detectorTypeComboBox.currentIndex())
