@@ -52,7 +52,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     user_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     _static_ax = static_canvas.figure.subplots()
-    _simControls = _siegSim.SiegSimulationControls();
+    _simControls = _siegSim.SiegSimulationControls()
 
 
 
