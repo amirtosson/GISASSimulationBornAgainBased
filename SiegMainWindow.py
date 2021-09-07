@@ -66,18 +66,18 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         uic.loadUi("siegmainwindow.ui", self)
         # which defines a single set of axes as self.axes.
         layout = QtWidgets.QVBoxLayout(self.plotWidget)
- 
+
         # static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         layout.addWidget(self.static_canvas)
         dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         layout.addWidget(dynamic_canvas)
 
-        #self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.static_canvas, self))
-        #self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.dynamic_canvas, self))
-        user_canvas = FigureCanvas(Figure(figsize=(10, 10)))
+        self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.static_canvas, self))
+        #self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.user_canvas, self))
+        user_canvas = FigureCanvas(Figure(figsize=(5, 5)))
         file_data_layout = QtWidgets.QVBoxLayout(self.controlWidget)
         file_data_layout.addWidget(user_canvas)
-
+        #self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.user_canvas, self))
         #self._timer = dynamic_canvas.new_timer(
         #    100, [(self._update_canvas, (), {})])
         #self._timer.start()
