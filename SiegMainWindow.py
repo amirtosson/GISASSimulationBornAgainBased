@@ -52,6 +52,8 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     user_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     _static_ax = static_canvas.figure.subplots()
+    _user_ax = user_canvas.figure.subplots()
+
     _simControls = _siegSim.SiegSimulationControls()
 
 
@@ -59,6 +61,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.toolbar = NavigationToolbar(self.user_canvas, self)
         self.initUI()
 
     def initUI(self):
@@ -72,21 +75,24 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         layout.addWidget(dynamic_canvas)
 
-        self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.static_canvas, self))
-        #self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.user_canvas, self))
-        user_canvas = FigureCanvas(Figure(figsize=(5, 5)))
+        #self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.static_canvas, self))
+        #NavigationToolbar(self.user_canvas, self)
         file_data_layout = QtWidgets.QVBoxLayout(self.controlWidget)
-        file_data_layout.addWidget(user_canvas)
+        file_data_layout.addWidget(self.user_canvas)
+        #file_data_layout.addWidget(self.toolbar)
         #self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.user_canvas, self))
         #self._timer = dynamic_canvas.new_timer(
         #    100, [(self._update_canvas, (), {})])
         #self._timer.start()
-        self._dynamic_ax = dynamic_canvas.figure.subplots()
-        self._dynamic_ax2 = user_canvas.figure.subplots()
+        self._dynamic_ax = dynamic_canvas.figure.subplots(1,1)
+        self._dynamic_ax2 = self.user_canvas.figure.subplots(1,1)
 
         self.fullscreenAction.triggered.connect(self.FullscreenAction)
         self.randGroupBox.setHidden(True)
         self.diffGroupBox.setHidden(True)
+        self.backgroundValueSpinBox.setHidden(True)
+        self.bgLabel.setHidden(True)
+
         self.configInitImgToolButton.setHidden(True)
         self.configSampleButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.configInitImgToolButton.setIcon(
@@ -109,10 +115,10 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.tabWidget.currentChanged.connect(self.SubmitButtonText)
         self.submitButton.clicked.connect(self.SumbitUserInput)
         self.sampleTypeComboBox.currentIndexChanged.connect(self.SampleTypeChanged)
+        self.backgroundTypeComboBox.currentIndexChanged.connect(self.BackgroundTypeChanged)
 
     def speaking_method(self):
         _siegSim.Test()
-
 
     def onclick(self, event):
         ix, iy = event.xdata, event.ydata
@@ -139,6 +145,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
             self.setButton.setEnabled(False)
         else:
             self.randGroupBox.setHidden(True)
+            self.setButton.setEnabled(True)
 
     def UseDifference(self):
         if self.incDiffCheckBox.isChecked():
@@ -302,7 +309,6 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
         if dialog.exec_() == QtWidgets.QDialog.Accepted:
             file_full_path = str(dialog.selectedFiles()[0])
-        print(file_full_path)
         lines = loadtxt(file_full_path, comments="#", delimiter=" ", unpack=False)
         self._dynamic_ax2.clear()
         self._dynamic_ax2.imshow(lines, interpolation='none')
@@ -338,3 +344,11 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         # Shift the sinusoid as a function of time.
         self._dynamic_ax.plot(t, np.sin(t + time.time()))
         self._dynamic_ax.figure.canvas.draw()
+
+    def BackgroundTypeChanged(self, ind):
+        if ind == 1:
+            self.backgroundValueSpinBox.setHidden(False)
+            self.bgLabel.setHidden(False)
+        else:
+            self.backgroundValueSpinBox.setHidden(True)
+            self.bgLabel.setHidden(True)
