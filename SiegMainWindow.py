@@ -48,12 +48,15 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     rndMatrix = [0, 0, 0, 0]
     rndParasAreOK = False
     RefImg = [ ]
+    electron_density1 = [ ]
+    electron_density2 = []
     static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     user_canvas = FigureCanvas(Figure(figsize=(5, 3)))
+    electron_canvas = FigureCanvas(Figure(figsize=(5, 3)))
     _static_ax = static_canvas.figure.subplots()
     _user_ax = user_canvas.figure.subplots()
-
+    _electron_ax = electron_canvas.figure.subplots()
     _simControls = _siegSim.SiegSimulationControls()
 
 
@@ -79,6 +82,10 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         #NavigationToolbar(self.user_canvas, self)
         file_data_layout = QtWidgets.QVBoxLayout(self.controlWidget)
         file_data_layout.addWidget(self.user_canvas)
+
+        electron_density_layout = QtWidgets.QVBoxLayout(self.electronWidget)
+        electron_density_layout.addWidget(self.electron_canvas)
+
         #file_data_layout.addWidget(self.toolbar)
         #self.addToolBar(QtCore.Qt.BottomToolBarArea, NavigationToolbar(self.user_canvas, self))
         #self._timer = dynamic_canvas.new_timer(
@@ -273,6 +280,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         func()
 
     def SubmitSample(self):
+        numOfLayer = self.numOfLayerSpinBox.value()
         s = _siegSample.SiegSample(self.numOfLayerSpinBox.value())
         T = []
         for i in range(self.layerTable.rowCount()):
@@ -281,21 +289,24 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self._simControls.Sample = s
         disData = [0] * 20
         thickData = [0] * 20
+        absData = [0] * 20
         for i in range(20):
             x = 1
             y = 1
             if i % 2 == 0:
                 x = 2
                 y = 6
-            dis_h = (x + 0.2 * randint(0, 10)) * 1e-05
-            thi_h = (y + (y / x) * 0.2 * randint(0, 10))
+            dis_h = np.random.randint(1, 5) * 1e-05
+            thi_h = 0.4 * np.random.randint(1, 10)
+            abs_h = np.random.randint(8, 31) * 1e-06
             disData[i] = dis_h
             thickData[i] = thi_h
+            absData[i] = abs_h
         for _ in range(1):
-            self.RefImg = self._simControls.GenerateRefData(True, thickData, disData)
-            max_index_col = np.argmax(self.RefImg, axis=1)
-            with open('dataTEST.csv', 'a', encoding='UTF8', newline='') as fd:
-                np.savetxt(fd, self.RefImg[:, max_index_col[0]])
+            self.RefImg, self.electron_density1, self.electron_density2 = self._simControls.GenerateRefData(numOfLayer, thickData, disData, absData)
+            #max_index_col = np.argmax(self.RefImg, axis=1)
+            #with open('dataTEST.csv', 'a', encoding='UTF8', newline='') as fd:
+                #np.savetxt(fd, self.RefImg[:, max_index_col[0]])
                 #np.savetxt(fd, self.RefImg[:, max_index_col[0]], delimiter=",")
 
     def SubmitBeam(self):
@@ -335,7 +346,10 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self._static_ax.imshow(self.RefImg, interpolation='none')
         self._static_ax.figure.canvas.draw()
         self.static_canvas.mpl_connect('button_press_event', self.onclick)
-
+        self._electron_ax.clear()
+        #t = np.linspace(0, 10, 101)
+        self._electron_ax.plot(self.electron_density1, np.real(self.electron_density2))
+        self._electron_ax.figure.canvas.draw()
         #self.scene().addItem(QtGui.QGraphicsLineItem(QtCore.QLineF((200,100), (250,100))))
 
     def _update_canvas(self):

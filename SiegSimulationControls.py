@@ -67,7 +67,7 @@ class SiegSimulationControls():
         return beam
         
     def InitDetector(self):
-        detector = ba.RectangularDetector(256, 13.3, 1024, 51.2)
+        detector = ba.RectangularDetector(1024, 51.2, 1024, 51.2)
         detector.setResolutionFunction(ba.ResolutionFunction2DGaussian(0.02, 0.02))
         detector.setPerpendicularToReflectedBeam(1277.0, 10.75, 20.65)
         return detector
@@ -80,7 +80,48 @@ class SiegSimulationControls():
         sim.setBackground(background)
         return sim
 
-    def InitSample(self, onlyLayers=False, ThiDataUser=0, DisDataUser=0):
+
+    def InitSample(self,numLayers=1, ThiDataUser=0, DisDataUser=0, AbsorUserData=0):
+        # Defining constant materials
+        materialAir = ba.HomogeneousMaterial("Air", 0.0, 0.0)
+        materialSiO2 = ba.HomogeneousMaterial("SiO2", 5.93e-06, 7.42e-08)
+        materialSubstrate = ba.HomogeneousMaterial("Substrate", 6.31e-06, 1.21e-07)
+
+        # Defining constant Layers
+        layerAir = ba.Layer(materialAir)
+        layerSiO2 = ba.Layer(materialSiO2, 100)
+        layerSubstrate = ba.Layer(materialSubstrate, 500)
+
+        # Defining Roughness of constant layers
+        layerRoughnessSiO2 = ba.LayerRoughness(0.54, 0.6, 30.0 * nm)
+        layerRoughnessSubstrate = ba.LayerRoughness(0.54, 0.6, 30.0 * nm)
+
+        # Defining layers roughness
+        layersRoughness = [ba.LayerRoughness(0.46, 0.6, 30.0 * nm), ba.LayerRoughness(0.39, 0.6, 30.0 * nm),
+                           ba.LayerRoughness(0.57, 0.6, 30.0 * nm)]
+
+        # Defining layers names
+        layersNames = ["TaO", "Ta", "Cu3N"]
+        multiLayer = ba.MultiLayer()
+        multiLayer.setCrossCorrLength(2000)
+
+        # Adding the Air layer
+        multiLayer.addLayer(layerAir)
+        print(numLayers)
+        for i in range(numLayers):
+            material = ba.HomogeneousMaterial(layersNames[i % 3] + str(i), DisDataUser[i], AbsorUserData[i])
+            layer = ba.Layer(material, ThiDataUser[i])
+            layerRoughness = layersRoughness[i % 3]
+            multiLayer.addLayerWithTopRoughness(layer, layerRoughness)
+        print("numLayers")
+        # Adding the SiO2 layer
+        multiLayer.addLayerWithTopRoughness(layerSiO2, layerRoughnessSiO2)
+
+        # Adding the Substrate layer
+        multiLayer.addLayerWithTopRoughness(layerSubstrate, layerRoughnessSubstrate)
+        return multiLayer
+
+    def InitSampleLegacy(self, onlyLayers=False, ThiDataUser=0, DisDataUser=0):
         if onlyLayers == False:
             disData = [0] * 20
             thickData = [0] * 20
@@ -238,16 +279,17 @@ class SiegSimulationControls():
     
     
     
-    def StartSim(self, isReference= False, onlyLayers=False, ThiDataUser=0, DisDataUser=0):
+    def StartSim(self, numOfLayer=1, ThiDataUser=0, DisDataUser=0, AbsorUserData=0):
         #print("\n ThreadStart " ,thrId)
         #self.RunSim(self.InitSim(self.InitSample(), self.InitBeam(), self.InitDetector()))
         #print("\n ThreadEnd " ,thrId)
         #return ("DONE ")
         #fig = plt.figure(figsize=(6, 3.2))
-        if isReference:
-            return self.RunSim(self.InitSim(self.InitSampleSingle(), self.InitBeam(), self.InitDetector()))
-        else:
-            return self.RunSim(self.InitSim(self.InitSample(onlyLayers,ThiDataUser,DisDataUser), self.InitBeam(), self.InitDetector()))
+
+        zpoints, slds = ba.materialProfile(self.InitSample(numOfLayer,ThiDataUser,DisDataUser,AbsorUserData))
+        print("TOTO")
+        return self.RunSim(self.InitSim(self.InitSample(numOfLayer,ThiDataUser,DisDataUser,AbsorUserData), self.InitBeam(), self.InitDetector())),zpoints, slds
+
         #return ("DONE ")
        # ax = fig.add_subplot()
        # ax.set_title('colorMap')
@@ -272,8 +314,8 @@ class SiegSimulationControls():
         t1_stop = process_time.default_timer()
         print("\n NOThreading " ,t1_stop-t1_start)
       
-    def GenerateRefData(self, onlyLayers=False, ThiDataUser=0, DisDataUser=0):
-        return self.StartSim(False)
+    def GenerateRefData(self, numOfLayer=1, ThiDataUser=0, DisDataUser=0, AbsorUserData=0):
+        return self.StartSim(numOfLayer, ThiDataUser, DisDataUser, AbsorUserData)
 
 
     def TestVar(self):

@@ -1072,6 +1072,16 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="electronTab">
+       <attribute name="title">
+        <string>Electron Density</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_8">
+        <item>
+         <widget class="QWidget" name="electronWidget" native="true"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item>
