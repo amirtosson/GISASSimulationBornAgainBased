@@ -327,17 +327,20 @@
               <property name="showGrid">
                <bool>true</bool>
               </property>
+              <property name="rowCount">
+               <number>0</number>
+              </property>
               <property name="columnCount">
-               <number>5</number>
+               <number>6</number>
               </property>
               <attribute name="horizontalHeaderVisible">
-               <bool>false</bool>
+               <bool>true</bool>
               </attribute>
               <attribute name="horizontalHeaderCascadingSectionResizes">
                <bool>false</bool>
               </attribute>
               <attribute name="horizontalHeaderMinimumSectionSize">
-               <number>40</number>
+               <number>60</number>
               </attribute>
               <attribute name="horizontalHeaderDefaultSectionSize">
                <number>110</number>
@@ -349,10 +352,10 @@
                <bool>false</bool>
               </attribute>
               <attribute name="verticalHeaderCascadingSectionResizes">
-               <bool>false</bool>
+               <bool>true</bool>
               </attribute>
               <attribute name="verticalHeaderMinimumSectionSize">
-               <number>25</number>
+               <number>30</number>
               </attribute>
               <attribute name="verticalHeaderDefaultSectionSize">
                <number>40</number>
@@ -387,12 +390,7 @@
               </column>
               <column>
                <property name="text">
-                <string>Dispersion</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Thickness</string>
+                <string>Thickness [nm]</string>
                </property>
                <property name="font">
                 <font>
@@ -403,7 +401,29 @@
               </column>
               <column>
                <property name="text">
-                <string>Roughness</string>
+                <string>Dispersion *e-6</string>
+               </property>
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Absorption *e-8</string>
+               </property>
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>RMS-Roughness [nm]</string>
                </property>
                <property name="font">
                 <font>

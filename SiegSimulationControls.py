@@ -39,10 +39,11 @@ t1_stop=0
 
 class SiegSimulationControls():
     resultAll = []
-    def __init__(self, sample = _siegSample.SiegSample(1), detector = _siegDetector.SiegDetector(0)):
+    def __init__(self, sample = _siegSample.SiegSample(1), detector = _siegDetector.SiegDetector(0), userData = []):
         super().__init__
         self.Sample = sample
         self.Detector = detector
+        self.UserData = userData
 
 
     @property
@@ -60,6 +61,14 @@ class SiegSimulationControls():
     @Detector.setter
     def Detector(self, detector):
         self._detector = detector
+
+    @property
+    def UserData(self):
+        return self._userData
+
+    @UserData.setter
+    def UserData(self, userData):
+        self._userData = userData
     
     def InitBeam(self):
         direction = ba.Direction(0.64*deg, 0.0*deg)
@@ -86,19 +95,17 @@ class SiegSimulationControls():
         materialAir = ba.HomogeneousMaterial("Air", 0.0, 0.0)
         materialSiO2 = ba.HomogeneousMaterial("SiO2", 5.93e-06, 7.42e-08)
         materialSubstrate = ba.HomogeneousMaterial("Substrate", 6.31e-06, 1.21e-07)
-
         # Defining constant Layers
         layerAir = ba.Layer(materialAir)
-        layerSiO2 = ba.Layer(materialSiO2, 100)
-        layerSubstrate = ba.Layer(materialSubstrate, 500)
+        layerSiO2 = ba.Layer(materialSiO2, 100* nm)
+        layerSubstrate = ba.Layer(materialSubstrate, 500* nm)
 
         # Defining Roughness of constant layers
-        layerRoughnessSiO2 = ba.LayerRoughness(0.54, 0.6, 30.0 * nm)
-        layerRoughnessSubstrate = ba.LayerRoughness(0.54, 0.6, 30.0 * nm)
-
+        layerRoughnessSiO2 = ba.LayerRoughness(0.54* nm, 0.6* nm, 30.0 * nm)
+        layerRoughnessSubstrate = ba.LayerRoughness(0.54* nm, 0.6* nm, 30.0 * nm)
         # Defining layers roughness
-        layersRoughness = [ba.LayerRoughness(0.46, 0.6, 30.0 * nm), ba.LayerRoughness(0.39, 0.6, 30.0 * nm),
-                           ba.LayerRoughness(0.57, 0.6, 30.0 * nm)]
+        layersRoughness = [ba.LayerRoughness(0.46* nm, 0.6* nm, 30.0 * nm), ba.LayerRoughness(0.39* nm, 0.6* nm, 30.0 * nm),
+                           ba.LayerRoughness(0.57* nm, 0.6* nm, 30.0 * nm)]
 
         # Defining layers names
         layersNames = ["TaO", "Ta", "Cu3N"]
@@ -107,13 +114,12 @@ class SiegSimulationControls():
 
         # Adding the Air layer
         multiLayer.addLayer(layerAir)
-        print(numLayers)
         for i in range(numLayers):
-            material = ba.HomogeneousMaterial(layersNames[i % 3] + str(i), DisDataUser[i], AbsorUserData[i])
-            layer = ba.Layer(material, ThiDataUser[i])
-            layerRoughness = layersRoughness[i % 3]
+            material = ba.HomogeneousMaterial(self.UserData[i][0], self.UserData[i][2] *1e-06, self.UserData[i][3] *1e-08)
+            layer = ba.Layer(material, self.UserData[i][1]* nm)
+            layerRoughness = ba.LayerRoughness(self.UserData[i][4]* nm, 0.6* nm, 30.0 * nm)
             multiLayer.addLayerWithTopRoughness(layer, layerRoughness)
-        print("numLayers")
+
         # Adding the SiO2 layer
         multiLayer.addLayerWithTopRoughness(layerSiO2, layerRoughnessSiO2)
 
@@ -287,7 +293,6 @@ class SiegSimulationControls():
         #fig = plt.figure(figsize=(6, 3.2))
 
         zpoints, slds = ba.materialProfile(self.InitSample(numOfLayer,ThiDataUser,DisDataUser,AbsorUserData))
-        print("TOTO")
         return self.RunSim(self.InitSim(self.InitSample(numOfLayer,ThiDataUser,DisDataUser,AbsorUserData), self.InitBeam(), self.InitDetector())),zpoints, slds
 
         #return ("DONE ")
@@ -319,7 +324,7 @@ class SiegSimulationControls():
 
 
     def TestVar(self):
-        print(self.Detector.resolutionFunction)
+        print(self.UserData[0][0])
 
 
 

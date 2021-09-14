@@ -123,6 +123,9 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.submitButton.clicked.connect(self.SumbitUserInput)
         self.sampleTypeComboBox.currentIndexChanged.connect(self.SampleTypeChanged)
         self.backgroundTypeComboBox.currentIndexChanged.connect(self.BackgroundTypeChanged)
+        #TODO: remove
+        self.autoRandCheckBox.setEnabled(False)
+        self.incDiffCheckBox.setEnabled(False)
 
     def speaking_method(self):
         _siegSim.Test()
@@ -133,10 +136,23 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         t = np.linspace(0, 10, 1024)
         # Shift the sinusoid as a function of time.
         max_index_col = np.argmax(self.RefImg, axis=1)
-        print(max_index_col)
-        self._dynamic_ax.plot(t, self.RefImg[:, max_index_col[0]])
-        with open('data2.csv', 'a', encoding='UTF8', newline='') as fd:
-            np.savetxt(fd, self.RefImg[:, max_index_col[0]], delimiter=",")
+        #TODO: make it better
+        cols= (self.RefImg[:, int(ix)]+self.RefImg[:, int(ix)-1] + self.RefImg[:, int(ix+1)]
+               + self.RefImg[:, int(ix -2)] + self.RefImg[:, int(ix+2)] + self.RefImg[:, int(ix-3)] + self.RefImg[:, int(ix+3)]
+               )/6
+
+        self._dynamic_ax.plot(t,cols)
+        """
+        for i in range(1024):
+            res = 0
+            for j in range(-10,10):
+                res = res + self.RefImg[int(ix)+j, i]
+            cols.append(res/20)
+
+        self._dynamic_ax.plot(t, cols)
+        """
+        #with open('data2.csv', 'a', encoding='UTF8', newline='') as fd:
+            #np.savetxt(fd, self.RefImg[:, max_index_col[0]], delimiter=",")
 
         self._dynamic_ax.figure.canvas.draw()
 
@@ -257,7 +273,8 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     def SetLayers(self):
         numRows = self.numOfLayerSpinBox.value()
         self.layerTable.setRowCount(numRows)
-        for row in range(self.numOfLayerSpinBox.value()):
+
+        for row in range(numRows):
             # self.layerTable.insertRow(self.layerTable.rowCount())
             item = QtWidgets.QTableWidgetItem(str(row + 1))
             item.setFlags(QtCore.Qt.ItemIsEnabled)
@@ -273,6 +290,8 @@ class SiegMainWindow(QtWidgets.QMainWindow):
                 self.layerTable.setItem(row, 2, QtWidgets.QTableWidgetItem(str(0.0)))
                 self.layerTable.setItem(row, 3, QtWidgets.QTableWidgetItem(str(0.0)))
                 self.layerTable.setItem(row, 4, QtWidgets.QTableWidgetItem(str(0.0)))
+                self.layerTable.setItem(row, 5, QtWidgets.QTableWidgetItem(str(0.0)))
+
 
     def SumbitUserInput(self):
         switcher = {0: self.SubmitSample, 1: self.SubmitDetector, 2: self.SubmitBeam, 3: self.StartSim, 4: self.UpdateImg}
@@ -281,10 +300,20 @@ class SiegMainWindow(QtWidgets.QMainWindow):
 
     def SubmitSample(self):
         numOfLayer = self.numOfLayerSpinBox.value()
-        s = _siegSample.SiegSample(self.numOfLayerSpinBox.value())
+        s = _siegSample.SiegSample(numOfLayer)
         T = []
-        for i in range(self.layerTable.rowCount()):
-           T.append([float(self.layerTable.item(i, 2).text()), float(self.layerTable.item(i, 3).text()), float(self.layerTable.item(i, 4).text())])
+        for i in range(numOfLayer):
+           T.append([self.layerTable.item(i, 1).text(),
+                     float(self.layerTable.item(i, 2).text()),
+                     float(self.layerTable.item(i, 3).text()),
+                     float(self.layerTable.item(i, 4).text()),
+                     float(self.layerTable.item(i, 5).text())])
+        self._simControls.UserData = T
+        #self._simControls.TestVar()
+        self.RefImg, self.electron_density1, self.electron_density2 = self._simControls.GenerateRefData(numOfLayer)
+        #self._simControls.InitSample(numOfLayer)
+        #print(T)
+        """
         s.layersData = T
         self._simControls.Sample = s
         disData = [0] * 20
@@ -308,7 +337,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
             #with open('dataTEST.csv', 'a', encoding='UTF8', newline='') as fd:
                 #np.savetxt(fd, self.RefImg[:, max_index_col[0]])
                 #np.savetxt(fd, self.RefImg[:, max_index_col[0]], delimiter=",")
-
+        """
     def SubmitBeam(self):
         self._simControls.TestVar()
 
