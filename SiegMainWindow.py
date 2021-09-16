@@ -48,6 +48,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     rndMatrix = [0, 0, 0, 0]
     rndParasAreOK = False
     RefImg = [ ]
+    LineProfile = []
     electron_density1 = [ ]
     electron_density2 = []
     static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
@@ -99,7 +100,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.diffGroupBox.setHidden(True)
         self.backgroundValueSpinBox.setHidden(True)
         self.bgLabel.setHidden(True)
-
+        self.beamDataWidget.setHidden(True)
         self.configInitImgToolButton.setHidden(True)
         self.configSampleButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.configInitImgToolButton.setIcon(
@@ -123,12 +124,35 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.submitButton.clicked.connect(self.SumbitUserInput)
         self.sampleTypeComboBox.currentIndexChanged.connect(self.SampleTypeChanged)
         self.backgroundTypeComboBox.currentIndexChanged.connect(self.BackgroundTypeChanged)
+        self.logScaleCheckBox.stateChanged.connect(self.UpdateImg)
+        self.addBeamStopCheckBox.stateChanged.connect(self.ShowBeamStopData)
+        self.setBeamStopPushButton.clicked.connect(self.SetBeamStop)
+
+
+
         #TODO: remove
         self.autoRandCheckBox.setEnabled(False)
         self.incDiffCheckBox.setEnabled(False)
 
     def speaking_method(self):
         _siegSim.Test()
+
+    def ShowBeamStopData(self):
+        if self.addBeamStopCheckBox.isChecked():
+            self.beamDataWidget.setHidden(False)
+        else:
+            self.beamDataWidget.setHidden(True)
+
+    def SetBeamStop(self):
+        self._dynamic_ax.clear()
+        helper = self.LineProfile
+
+
+        helper[(self.yPixelBSSpinBox.value() - self.radiusBSSpinBox.value()): (self.yPixelBSSpinBox.value() + self.radiusBSSpinBox.value())] = 0
+        t = np.linspace(0, 10, 1024)
+        self._dynamic_ax.plot(t, helper)
+        self._dynamic_ax.figure.canvas.draw()
+
 
     def onclick(self, event):
         ix, iy = event.xdata, event.ydata
@@ -137,11 +161,12 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         # Shift the sinusoid as a function of time.
         max_index_col = np.argmax(self.RefImg, axis=1)
         #TODO: make it better
-        cols= (self.RefImg[:, int(ix)]+self.RefImg[:, int(ix)-1] + self.RefImg[:, int(ix+1)]
+        self.LineProfile = (self.RefImg[:, int(ix)]+self.RefImg[:, int(ix)-1] + self.RefImg[:, int(ix+1)]
                + self.RefImg[:, int(ix -2)] + self.RefImg[:, int(ix+2)] + self.RefImg[:, int(ix-3)] + self.RefImg[:, int(ix+3)]
                )/6
 
-        self._dynamic_ax.plot(t,cols)
+        print(self.LineProfile.shape)
+        self._dynamic_ax.plot(t,self.LineProfile)
         """
         for i in range(1024):
             res = 0
@@ -292,7 +317,6 @@ class SiegMainWindow(QtWidgets.QMainWindow):
                 self.layerTable.setItem(row, 4, QtWidgets.QTableWidgetItem(str(0.0)))
                 self.layerTable.setItem(row, 5, QtWidgets.QTableWidgetItem(str(0.0)))
 
-
     def SumbitUserInput(self):
         switcher = {0: self.SubmitSample, 1: self.SubmitDetector, 2: self.SubmitBeam, 3: self.StartSim, 4: self.UpdateImg}
         func = switcher.get(self.tabWidget.currentIndex())
@@ -338,6 +362,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
                 #np.savetxt(fd, self.RefImg[:, max_index_col[0]])
                 #np.savetxt(fd, self.RefImg[:, max_index_col[0]], delimiter=",")
         """
+
     def SubmitBeam(self):
         self._simControls.TestVar()
 
@@ -372,7 +397,10 @@ class SiegMainWindow(QtWidgets.QMainWindow):
 
     def UpdateImg(self):
         self._static_ax.clear()
-        self._static_ax.imshow(self.RefImg, interpolation='none')
+        if self.logScaleCheckBox.isChecked():
+            self._static_ax.imshow(np.log(self.RefImg), interpolation='none')
+        else:
+            self._static_ax.imshow(self.RefImg, interpolation='none')
         self._static_ax.figure.canvas.draw()
         self.static_canvas.mpl_connect('button_press_event', self.onclick)
         self._electron_ax.clear()
