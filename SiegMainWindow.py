@@ -119,6 +119,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.randomParaOKButton.clicked.connect(self.SubmitRandomizationPara)
         self.setButton.clicked.connect(self.SetLayers)
         self.uploadFromFileButton.clicked.connect(self.UploadFile)
+        self.saveTXTPushButton.clicked.connect(self.SaveAsTxtFile)
         #self.setButton.setToolTip("")
         self.tabWidget.currentChanged.connect(self.SubmitButtonText)
         self.submitButton.clicked.connect(self.SumbitUserInput)
@@ -133,6 +134,9 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         #TODO: remove
         self.autoRandCheckBox.setEnabled(False)
         self.incDiffCheckBox.setEnabled(False)
+
+    def closeEvent(self, event):
+        self.deleteLater()
 
     def speaking_method(self):
         _siegSim.Test()
@@ -378,6 +382,16 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self._dynamic_ax2.clear()
         self._dynamic_ax2.imshow(lines, interpolation='none')
         self._dynamic_ax2.figure.canvas.draw()
+
+    def SaveAsTxtFile(self):
+        name = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File')
+        path = name[0]
+        path += ".txt"
+        with open(path, 'w') as f:
+            np.savetxt(f, self.LineProfile)
+
+
+
 
     def SubmitDetector(self):
         d = _siegDetector.SiegDetector(self.detectorTypeComboBox.currentIndex())
