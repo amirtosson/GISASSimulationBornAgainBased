@@ -17,6 +17,7 @@ date:       01-04-2021
 """
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import uic
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import csv
 from PyQt5.QtGui import QPainter, QBrush, QPen
 from PyQt5.QtCore import Qt
@@ -26,6 +27,7 @@ import sys
 import SiegSimulationControls as _siegSim
 import SiegSample as _siegSample
 import SiegDetector as _siegDetector
+import SiegParaChecker as _paraChecker
 from random import randint
 from numpy import loadtxt
 
@@ -45,6 +47,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     detectorIsReady = False
     simIsReady = False
     beamIsReady = False
+    runSimIsOk = False
     rndMatrix = [0, 0, 0, 0]
     rndParasAreOK = False
     RefImg = [ ]
@@ -59,7 +62,12 @@ class SiegMainWindow(QtWidgets.QMainWindow):
     _user_ax = user_canvas.figure.subplots()
     _electron_ax = electron_canvas.figure.subplots()
     _simControls = _siegSim.SiegSimulationControls()
+    _siegChecker = _paraChecker.SiegParaChecker()
 
+    @pyqtSlot(int)
+    def Progress(self, x):
+        ''' Give evidence that a bag was punched. '''
+        print(x)
 
 
 
@@ -73,7 +81,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         uic.loadUi("siegmainwindow.ui", self)
         # which defines a single set of axes as self.axes.
         layout = QtWidgets.QVBoxLayout(self.plotWidget)
-
+        self._simControls.progressVal.connect(self.Progress)
         # static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         layout.addWidget(self.static_canvas)
         dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
@@ -98,13 +106,10 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.fullscreenAction.triggered.connect(self.FullscreenAction)
         self.randGroupBox.setHidden(True)
         self.diffGroupBox.setHidden(True)
-        self.backgroundValueSpinBox.setHidden(True)
+        #self.backgroundValueSpinBox.setHidden(True)
         self.bgLabel.setHidden(True)
         self.beamDataWidget.setHidden(True)
-        self.configInitImgToolButton.setHidden(True)
         self.configSampleButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
-        self.configInitImgToolButton.setIcon(
-            self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.configDetectorButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.configSimButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
         self.configBeamButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
@@ -112,7 +117,6 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.autoRandCheckBox.stateChanged.connect(self.UseAutomaticRandomization)
         self.incDiffCheckBox.stateChanged.connect(self.UseDifference)
         self.configSampleButton.clicked.connect(self.OpenSamplePage)
-        self.configInitImgToolButton.clicked.connect(self.OpenInitImgPage)
         self.configDetectorButton.clicked.connect(self.OpenDetectorPage)
         self.configBeamButton.clicked.connect(self.OpenBeamPage)
         self.configSimButton.clicked.connect(self.OpenSimPage)
@@ -128,7 +132,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         self.logScaleCheckBox.stateChanged.connect(self.UpdateImg)
         self.addBeamStopCheckBox.stateChanged.connect(self.ShowBeamStopData)
         self.setBeamStopPushButton.clicked.connect(self.SetBeamStop)
-
+        self.submitButton.setEnabled(False)
 
 
         #TODO: remove
@@ -137,6 +141,9 @@ class SiegMainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         self.deleteLater()
+
+    def StartSimButtonState(self):
+        self.startSimulationButton.setEnabled(self.runSimIsOk)
 
     def speaking_method(self):
         _siegSim.Test()
@@ -162,7 +169,6 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         ix, iy = event.xdata, event.ydata
         self._dynamic_ax.clear()
         t = np.linspace(0, 10, 1024)
-        # Shift the sinusoid as a function of time.
         max_index_col = np.argmax(self.RefImg, axis=1)
         #TODO: make it better
         self.LineProfile = (self.RefImg[:, int(ix)]+self.RefImg[:, int(ix)-1] + self.RefImg[:, int(ix+1)]
@@ -203,10 +209,8 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         if self.incDiffCheckBox.isChecked():
             self.diffGroupBox.setHidden(False)
             self.setButton.setEnabled(False)
-            self.configInitImgToolButton.setHidden(False)
         else:
             self.diffGroupBox.setHidden(True)
-            self.configInitImgToolButton.setHidden(True)
 
     def SubmitButtonText(self, ind):
         self.submitButton.setEnabled(True)
@@ -218,13 +222,15 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         elif ind == 2:
             self.submitButton.setText("Submit beam")
         elif ind == 4:
-            self.submitButton.setText("Generate init-img")
+            self.submitButton.setText("Run")
+            if self.sampleIsReady and self.detectorIsReady and self.beamIsReady and self.simIsReady:
+                self.submitButton.setEnabled(True)
+            else:
+                self.submitButton.setEnabled(False)
         elif ind == 5:
             self.submitButton.setVisible(False)
         else:
-            self.submitButton.setText("Start simulation")
-            if not self.simIsReady or not self.sampleIsReady or not self.beamIsReady or not self.detectorIsReady:
-                self.submitButton.setEnabled(False)
+            self.submitButton.setText("Submit simulation")
 
     def OpenSamplePage(self):
         self.tabWidget.setCurrentIndex(0)
@@ -252,7 +258,7 @@ class SiegMainWindow(QtWidgets.QMainWindow):
             self.autoRandCheckBox.setCheckState(False)
             self.incDiffCheckBox.setCheckState(False)
 
-    def OpenInitImgPage(self):
+    def OpenProgressAndResPage(self):
         self.tabWidget.setCurrentIndex(4)
         self.SubmitButtonText(4)
 
@@ -280,6 +286,13 @@ class SiegMainWindow(QtWidgets.QMainWindow):
             self.configSimButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogApplyButton')))
         else:
             self.configSimButton.setIcon(self.style().standardIcon(getattr(QtWidgets.QStyle, 'SP_DialogCancelButton')))
+
+        if self.sampleIsReady and self.detectorIsReady and self.beamIsReady and self.simIsReady:
+            self.runSimIsOk = True
+            self.StartSimButtonState()
+        else:
+            self.runSimIsOk = False
+            self.StartSimButtonState()
 
     def SubmitRandomizationPara(self):
         self.rndMatrix[0] = self.disSpinBoxMin.value()
@@ -320,9 +333,10 @@ class SiegMainWindow(QtWidgets.QMainWindow):
                 self.layerTable.setItem(row, 3, QtWidgets.QTableWidgetItem(str(0.0)))
                 self.layerTable.setItem(row, 4, QtWidgets.QTableWidgetItem(str(0.0)))
                 self.layerTable.setItem(row, 5, QtWidgets.QTableWidgetItem(str(0.0)))
+        self.submitButton.setEnabled(True)
 
     def SumbitUserInput(self):
-        switcher = {0: self.SubmitSample, 1: self.SubmitDetector, 2: self.SubmitBeam, 3: self.StartSim, 4: self.UpdateImg}
+        switcher = {0: self.SubmitSample, 1: self.SubmitDetector, 2: self.SubmitBeam, 3: self.SubmitSim, 4: self.StartSimulation}
         func = switcher.get(self.tabWidget.currentIndex())
         func()
 
@@ -336,9 +350,17 @@ class SiegMainWindow(QtWidgets.QMainWindow):
                      float(self.layerTable.item(i, 3).text()),
                      float(self.layerTable.item(i, 4).text()),
                      float(self.layerTable.item(i, 5).text())])
-        self._simControls.UserData = T
+
+        self.sampleIsReady = self._siegChecker.CheckSamplePara(False, T)
+        if self.sampleIsReady:
+            self._simControls.UserData = T
+            self.UpdateTODOButtonsIcons()
+            self.OpenDetectorPage()
+        else:
+            #TODO: error msg to user
+            return
         #self._simControls.TestVar()
-        self.RefImg, self.electron_density1, self.electron_density2 = self._simControls.GenerateRefData(numOfLayer)
+        #self.RefImg, self.electron_density1, self.electron_density2 = self._simControls.GenerateRefData(numOfLayer)
         #self._simControls.InitSample(numOfLayer)
         #print(T)
         """
@@ -368,7 +390,59 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         """
 
     def SubmitBeam(self):
-        self._simControls.TestVar()
+        beam_dims = [0, 0, 0, 0]
+        beam_dims[0] = self.beanmAlphaSpinBox.value()
+        beam_dims[1] = self.beamPhiSpinBox.value()
+        beam_dims[2] = self.beamIntensitySpinBox.value()
+        beam_dims[3] = self.beamWaveLengthSpinBox.value()
+        self.beamIsReady = self._siegChecker.CheckBeamPara(beam_dims)
+        if self.detectorIsReady:
+            self._simControls.BeamData = beam_dims
+            self.UpdateTODOButtonsIcons()
+            self.OpenSimPage()
+        else:
+            # TODO: error msg to user
+            return
+
+    def SubmitDetector(self):
+        detector_dims = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        detector_dims[0] = self.xBinSpinBox.value()
+        detector_dims[1] = self.yBinSpinBox.value()
+        detector_dims[2] = self.detectorWidthSpinBox.value()
+        detector_dims[3] = self.detectorHeightSpinBox.value()
+        detector_dims[4] = self.resFncSigmaXSpinBox.value()
+        detector_dims[5] = self.resFncSigmaYSpinBox.value()
+        detector_dims[6] = self.detDistanceSpinBox.value()
+        detector_dims[7] = self.detU0SpinBox.value()
+        detector_dims[8] = self.detV0SpinBox.value()
+        self.detectorIsReady = self._siegChecker.CheckDetectorPara(detector_dims)
+        if self.detectorIsReady:
+            self._simControls.DetectorData = detector_dims
+            self.UpdateTODOButtonsIcons()
+            self.OpenBeamPage()
+        else:
+            # TODO: error msg to user
+            return
+
+    def SubmitSim(self):
+        sim_dims = [0, 0, 1, 1, 0]
+        sim_dims[0] = self.simTypeComboBox.currentIndex()
+        sim_dims[1] = self.matCalcTypeComboBox.currentIndex()
+        sim_dims[2] = 1 if self.incSpecularCheckBox.isChecked() else 0
+        sim_dims[3] = self.backgroundTypeComboBox.currentIndex()
+        sim_dims[4] = self.backgroundValueSpinBox.value()
+        self.simIsReady = self._siegChecker.CheckSimPara(sim_dims)
+        if self.simIsReady:
+            self._simControls.SimData = sim_dims
+            self.UpdateTODOButtonsIcons()
+            self.OpenProgressAndResPage()
+        else:
+            # TODO: error msg to user
+            return
+
+    def StartSimulation(self):
+        print("OK")
+        #self._simControls.GenerateData()
 
     def UploadFile(self):
         dialog = QtWidgets.QFileDialog(self)
@@ -390,24 +464,6 @@ class SiegMainWindow(QtWidgets.QMainWindow):
         with open(path, 'w') as f:
             np.savetxt(f, self.LineProfile)
 
-
-
-
-    def SubmitDetector(self):
-        d = _siegDetector.SiegDetector(self.detectorTypeComboBox.currentIndex())
-        detector_dims = [0, 0, 0, 0]
-        detector_dims[0] = self.xBinSpinBox.value()
-        detector_dims[1] = self.yBinSpinBox.value()
-        detector_dims[2] = self.detectorWidthSpinBox.value()
-        detector_dims[3] = self.detectorHeightSpinBox.value()
-        d.detectorDimensions = detector_dims
-        d.resolutionFunction = self.resolutionFncTypeComboBox.currentIndex()
-        d.resolutionFunctionSigmaX = self.resFncSigmaXSpinBox.value()
-        d.resolutionFunctionSigmaY = self.resFncSigmaYSpinBox.value()
-        self._simControls.Detector = d
-
-    def StartSim(self):
-        print("StartSim")
 
     def UpdateImg(self):
         self._static_ax.clear()

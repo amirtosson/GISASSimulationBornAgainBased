@@ -30,22 +30,24 @@ import concurrent.futures
 import SiegSample as _siegSample
 import  SiegDetector as _siegDetector
 import csv
-
+from PyQt5.QtCore import QObject, pyqtSignal
 
 t1_start=0
 t1_stop=0
 
-
-
-class SiegSimulationControls():
+class SiegSimulationControls(QObject):
     resultAll = []
-    def __init__(self, sample = _siegSample.SiegSample(1), detector = _siegDetector.SiegDetector(0), userData = []):
-        super().__init__
+    progressVal = pyqtSignal(int)
+
+    def __init__(self, sample=_siegSample.SiegSample(1), detector=_siegDetector.SiegDetector(0),
+                 userData=[], decData=[], beamData=[], simData=[]):
+        QObject.__init__(self)
         self.Sample = sample
         self.Detector = detector
         self.UserData = userData
-
-
+        self.DetectorData = decData
+        self.BeamData = beamData
+        self._SimData = simData
     @property
     def Sample(self):
         return self._sample
@@ -69,16 +71,46 @@ class SiegSimulationControls():
     @UserData.setter
     def UserData(self, userData):
         self._userData = userData
-    
+
+    @property
+    def DetectorData(self):
+        return self._decData
+
+    @DetectorData.setter
+    def DetectorData(self, decData):
+        self._decData = decData
+
+    @property
+    def BeamData(self):
+        return self._beamData
+
+    @BeamData.setter
+    def BeamData(self, beamData):
+        self._beamData = beamData
+
+    @property
+    def SimData(self):
+        return self._simData
+
+    @SimData.setter
+    def SimData(self, simData):
+        self._simData = simData
+
+    def ProgressChanged(self, p=0):
+        self.progressVal.emit(p)
+
     def InitBeam(self):
         direction = ba.Direction(0.64*deg, 0.0*deg)
-        beam = ba.Beam(1e+16*0.3/80, 0.14073*nm, direction) 
+        beam = ba.Beam(1e+16*0.3/80, 0.14073*nm, direction)
+        self.progressVal.emit(2)
         return beam
         
     def InitDetector(self):
-        detector = ba.RectangularDetector(1024, 51.2, 1024, 51.2)
-        detector.setResolutionFunction(ba.ResolutionFunction2DGaussian(0.02, 0.02))
-        detector.setPerpendicularToReflectedBeam(1277.0, 10.75, 20.65)
+        detector = ba.RectangularDetector(self.DetectorData[0], self.DetectorData[2],
+                                          self.DetectorData[1], self.DetectorData[3])
+        detector.setResolutionFunction(ba.ResolutionFunction2DGaussian(self.DetectorData[4], self.DetectorData[5]))
+        detector.setPerpendicularToReflectedBeam(self.DetectorData[6], self.DetectorData[7], self.DetectorData[8])
+        self.progressVal.emit(3)
         return detector
     
     def InitSim(self,_sample, _beam, _detector):
@@ -87,11 +119,13 @@ class SiegSimulationControls():
         sim.getOptions().setIncludeSpecular(True)
         background = ba.ConstantBackground(5e+01)
         sim.setBackground(background)
+        self.progressVal.emit(4)
         return sim
 
 
-    def InitSample(self,numLayers=1, ThiDataUser=0, DisDataUser=0, AbsorUserData=0):
+    def InitSample(self):
         # Defining constant materials
+        numLayers = len(self.UserData)
         materialAir = ba.HomogeneousMaterial("Air", 0.0, 0.0)
         materialSiO2 = ba.HomogeneousMaterial("SiO2", 5.93e-06, 7.42e-08)
         materialSubstrate = ba.HomogeneousMaterial("Substrate", 6.31e-06, 1.21e-07)
@@ -125,6 +159,7 @@ class SiegSimulationControls():
 
         # Adding the Substrate layer
         multiLayer.addLayerWithTopRoughness(layerSubstrate, layerRoughnessSubstrate)
+        self.progressVal.emit(1)
         return multiLayer
 
     def InitSampleLegacy(self, onlyLayers=False, ThiDataUser=0, DisDataUser=0):
@@ -262,46 +297,19 @@ class SiegSimulationControls():
     
     
     def RunSim(self,_simulation):
-        #import ba_plot
-        #t1_start = process_time.default_timer()
-        #_simulation.getOptions().setNumberOfBatches(10)
-        #_simulation.getOptions().setNumberOfThreads(6)  
-        #print(_simulation.numberOfSimulationElements())  
-        _simulation.getOptions().setUseAvgMaterials(True)
-        _simulation.getOptions().setIncludeSpecular(False)
-        #_simulation.getOptions().setMonteCarloIntegration(False)
-    
-        background = ba.ConstantBackground(5e+01)
-        _simulation.setBackground(background)
-        #ba_plot.run_and_plot(_simulation)
+        self.progressVal.emit(5)
         _simulation.runSimulation()  
         result = _simulation.result()   
         hist = result.histogram2d(ba.Axes.DEGREES)
-        resultarr = hist.array()
-        #resultAll.append(resultarr)
-        #t1_stop = process_time.default_timer()
-        #print("Sim_ " ,t1_stop-t1_start)
-        return resultarr
+        result_arr = hist.array()
+        return result_arr
     
     
     
-    def StartSim(self, numOfLayer=1, ThiDataUser=0, DisDataUser=0, AbsorUserData=0):
-        #print("\n ThreadStart " ,thrId)
-        #self.RunSim(self.InitSim(self.InitSample(), self.InitBeam(), self.InitDetector()))
-        #print("\n ThreadEnd " ,thrId)
-        #return ("DONE ")
-        #fig = plt.figure(figsize=(6, 3.2))
+    def StartSim(self):
+        zpoints, slds = ba.materialProfile(self.InitSample())
+        return self.RunSim(self.InitSim(self.InitSample(), self.InitBeam(), self.InitDetector())), zpoints, slds
 
-        zpoints, slds = ba.materialProfile(self.InitSample(numOfLayer,ThiDataUser,DisDataUser,AbsorUserData))
-        return self.RunSim(self.InitSim(self.InitSample(numOfLayer,ThiDataUser,DisDataUser,AbsorUserData), self.InitBeam(), self.InitDetector())),zpoints, slds
-
-        #return ("DONE ")
-       # ax = fig.add_subplot()
-       # ax.set_title('colorMap')
-        #plt.imshow(resArr)
-        
-    
-    
     def Test(self):
         t1_start = process_time.default_timer()
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -319,12 +327,12 @@ class SiegSimulationControls():
         t1_stop = process_time.default_timer()
         print("\n NOThreading " ,t1_stop-t1_start)
       
-    def GenerateRefData(self, numOfLayer=1, ThiDataUser=0, DisDataUser=0, AbsorUserData=0):
-        return self.StartSim(numOfLayer, ThiDataUser, DisDataUser, AbsorUserData)
+    def GenerateData(self):
+        return self.StartSim()
 
 
     def TestVar(self):
-        print(self.UserData[0][0])
+        self.ProgressChanged(5)
 
 
 

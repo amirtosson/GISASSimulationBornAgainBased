@@ -273,6 +273,9 @@
         </item>
         <item row="1" column="2">
          <widget class="QSpinBox" name="numOfLayerSpinBox">
+          <property name="minimum">
+           <number>1</number>
+          </property>
           <property name="maximum">
            <number>20</number>
           </property>
@@ -529,16 +532,6 @@
                 <string>Rectangular</string>
                </property>
               </item>
-              <item>
-               <property name="text">
-                <string>Spherical</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Specular</string>
-               </property>
-              </item>
              </widget>
             </item>
             <item>
@@ -594,23 +587,49 @@
                </item>
                <item row="0" column="3">
                 <widget class="QDoubleSpinBox" name="detectorWidthSpinBox">
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
                  <property name="singleStep">
                   <double>0.100000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>51.200000000000003</double>
                  </property>
                 </widget>
                </item>
                <item row="1" column="3">
                 <widget class="QDoubleSpinBox" name="detectorHeightSpinBox">
+                 <property name="maximum">
+                  <double>1000.000000000000000</double>
+                 </property>
                  <property name="singleStep">
                   <double>0.100000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>51.200000000000003</double>
                  </property>
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QSpinBox" name="yBinSpinBox"/>
+                <widget class="QSpinBox" name="yBinSpinBox">
+                 <property name="maximum">
+                  <number>100000</number>
+                 </property>
+                 <property name="value">
+                  <number>1024</number>
+                 </property>
+                </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QSpinBox" name="xBinSpinBox"/>
+                <widget class="QSpinBox" name="xBinSpinBox">
+                 <property name="maximum">
+                  <number>100000</number>
+                 </property>
+                 <property name="value">
+                  <number>1024</number>
+                 </property>
+                </widget>
                </item>
                <item row="0" column="4">
                 <spacer name="horizontalSpacer_11">
@@ -701,6 +720,9 @@
                <property name="singleStep">
                 <double>0.100000000000000</double>
                </property>
+               <property name="value">
+                <double>0.020000000000000</double>
+               </property>
               </widget>
              </item>
              <item row="1" column="0">
@@ -715,12 +737,88 @@
                <property name="singleStep">
                 <double>0.100000000000000</double>
                </property>
+               <property name="value">
+                <double>0.020000000000000</double>
+               </property>
               </widget>
              </item>
             </layout>
            </item>
            <item row="0" column="1">
             <spacer name="horizontalSpacer_8">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="perpendicularToBeamGroup">
+          <property name="title">
+           <string>Perpendicular to reflected beam</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_8">
+           <item row="2" column="1">
+            <widget class="QDoubleSpinBox" name="detV0SpinBox">
+             <property name="maximum">
+              <double>100000.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>20.649999999999999</double>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QDoubleSpinBox" name="detDistanceSpinBox">
+             <property name="maximum">
+              <double>100000.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>1277.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="detU0SpinBox">
+             <property name="maximum">
+              <double>10000.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>10.750000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_29">
+             <property name="text">
+              <string>V0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_28">
+             <property name="text">
+              <string>U0</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_25">
+             <property name="text">
+              <string>Distance</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <spacer name="horizontalSpacer_20">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
@@ -821,16 +919,31 @@
             </spacer>
            </item>
            <item row="1" column="2">
-            <widget class="QDoubleSpinBox" name="detectorHeightSpinBox_2">
+            <widget class="QDoubleSpinBox" name="beamPhiSpinBox">
+             <property name="decimals">
+              <number>3</number>
+             </property>
+             <property name="maximum">
+              <double>360.000000000000000</double>
+             </property>
              <property name="singleStep">
               <double>0.100000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.010000000000000</double>
              </property>
             </widget>
            </item>
            <item row="0" column="2">
-            <widget class="QDoubleSpinBox" name="detectorWidthSpinBox_3">
+            <widget class="QDoubleSpinBox" name="beanmAlphaSpinBox">
+             <property name="maximum">
+              <double>360.000000000000000</double>
+             </property>
              <property name="singleStep">
               <double>0.100000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.640000000000000</double>
              </property>
             </widget>
            </item>
@@ -862,14 +975,17 @@
           <item>
            <widget class="QLabel" name="label_21">
             <property name="text">
-             <string>Intensity:</string>
+             <string>Intensity *e^16:</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QDoubleSpinBox" name="detectorWidthSpinBox_2">
+           <widget class="QDoubleSpinBox" name="beamIntensitySpinBox">
             <property name="singleStep">
              <double>0.100000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -893,14 +1009,20 @@
           <item>
            <widget class="QLabel" name="label_22">
             <property name="text">
-             <string>Wavelength:</string>
+             <string>Wavelength [nm]:</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QDoubleSpinBox" name="detectorWidthSpinBox_4">
+           <widget class="QDoubleSpinBox" name="beamWaveLengthSpinBox">
+            <property name="decimals">
+             <number>5</number>
+            </property>
             <property name="singleStep">
              <double>0.100000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.140730000000000</double>
             </property>
            </widget>
           </item>
@@ -946,6 +1068,9 @@
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="currentIndex">
+           <number>1</number>
           </property>
           <item>
            <property name="text">
@@ -1022,6 +1147,9 @@
           <property name="text">
            <string>Include specular peal</string>
           </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="4" column="0">
@@ -1032,7 +1160,7 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QComboBox" name="detectorTypeComboBox_2">
+         <widget class="QComboBox" name="simTypeComboBox">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -1061,13 +1189,20 @@
          </widget>
         </item>
         <item row="5" column="1">
-         <widget class="QDoubleSpinBox" name="backgroundValueSpinBox"/>
+         <widget class="QDoubleSpinBox" name="backgroundValueSpinBox">
+          <property name="maximum">
+           <double>1000.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>50.000000000000000</double>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
       <widget class="QWidget" name="initImgTab">
        <attribute name="title">
-        <string>Initial Image</string>
+        <string>Progress and results</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
@@ -1231,22 +1366,6 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QToolButton" name="configInitImgToolButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Configure Init-Img</string>
-         </property>
-         <property name="toolButtonStyle">
-          <enum>Qt::ToolButtonTextBesideIcon</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QToolButton" name="configSampleButton">
          <property name="sizePolicy">
           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
@@ -1298,6 +1417,22 @@
         <widget class="QToolButton" name="configSimButton">
          <property name="text">
           <string>Configure Simulation</string>
+         </property>
+         <property name="toolButtonStyle">
+          <enum>Qt::ToolButtonTextBesideIcon</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="startSimulationButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Run Simulation</string>
          </property>
          <property name="toolButtonStyle">
           <enum>Qt::ToolButtonTextBesideIcon</enum>
